@@ -6,52 +6,82 @@ module Trello
   VERSION = "0.1.0"
 
   class ListSelectWindow
-    getter win, height, width, title
-    setter options : Array(String)
+    getter win, height, width, title, parent, child, selected, active
 
+    setter lines : Array(String)
     setter selected : Int8
-    getter selected
+    setter active : Bool
 
     WIDTH = 25
     HEIGHT = 15
 
     def initialize(x : Int32, y : Int32, height : Int32, width : Int32, title : String)
       @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
-      @win.border
-      @win.mvaddstr(title, x: 2, y: 0)
-      @options = [] of String
+      @lines = [] of String
       @selected = 0
       @width = width
       @height = height
       @title = title
+      @active = false
     end
 
     def refresh
+      win.border
+      win.mvaddstr(title, x: 2, y: 0)
+
       y = 0
-      @options.each_with_index do |option, i|
+      @lines.each_with_index do |option, i|
         if y >= height-2
           break
         end
 
         win.move(x: 1, y: y+=1)
+
         if i == @selected
-          win.attron(NCurses::Attribute::STANDOUT)
-          win.attron(NCurses::Attribute::BOLD)
+          if @active
+            win.attron(NCurses::Attribute::STANDOUT)
+          end
         end
         win.addnstr(option, width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
-        win.attroff(NCurses::Attribute::BOLD)
       end
       win.refresh
     end
 
     def handle_key(key)
       case key
-      when NCurses::KeyCode::DOWN
+      when NCurses::KeyCode::DOWN, 106 # J
         @selected += 1
-      when NCurses::KeyCode::UP
+      when NCurses::KeyCode::UP, 107 # K
         @selected -= 1
+      when NCurses::KeyCode::RETURN, 108 # L
+        child = @child
+        if child
+          @active = false
+          child.active = true
+        end
+      when 113, 104 # Q, J
+        parent = @parent
+        if parent
+          @active = false
+          parent.active = true
+        end
+      else
+        @lines << "#{key}"
       end
+    end
+
+    def link_parent(parent : ListSelectWindow)
+      @parent = parent
+      parent.link_child(self)
+    end
+
+    def link_child(child : ListSelectWindow)
+      @child = child
+    end
+
+    def active?
+      @active
     end
   end
 
@@ -63,53 +93,31 @@ module Trello
     NCurses.keypad(true) # allows arrow and F# keys
 
     boards = ListSelectWindow.new(x: 1, y: 1, height: 15, width: 25, title: "Boards")
-    boards.options = ["Free Week", "People", "People History 2018"]
+    boards.lines = ["Free Week", "People", "People History 2018"]
+    boards.active = true
 
     lists = ListSelectWindow.new(x: 1, y: 17, height: 15, width: 25, title: "Lists")
-    lists.options = ["Bugs", "Queue", "Development", "Staging", "Production"]
+    lists.lines = ["Free Week", "People", "People History 2018"]
+    lists.link_parent(boards)
 
     cards = ListSelectWindow.new(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28, title: "Cards")
-    cards.options = ["Bugs", "Queue", "Development", "Staging", "Production"]
+    cards.lines = ["Free Week", "People", "People History 2018"]
+    cards.link_parent(lists)
 
     windows = [boards, lists, cards]
 
-    while true
-      NCurses.refresh
-      windows.each { |w| w.refresh }
+    selected = 0
 
+    NCurses.refresh
+    windows.each { |w| w.refresh }
+
+    while true
       NCurses.notimeout(true)
       key = NCurses.getch
-      boards.handle_key(key)
+      windows.find(boards) { |w| w.active }.handle_key(key)
+
+      NCurses.refresh
+      windows.each { |w| w.refresh }
     end
   end
-
-  # NCurses.open do
-  #   NCurses.cbreak
-  #   NCurses.noecho
-  #   NCurses.keypad(true)
-  #
-  #   NCurses.box(v: '|', h: '=')
-  #   NCurses.mvaddstr("I'm the stdscr. Press any key to quit.", x: 10, y: 5)
-  #
-  #   NCurses::Window.open(x: 10, y: 5, height: 10, width: 20) do |win|
-  #     win.border
-  #     win.mvaddstr("Press any key!", x: 1, y: 1)
-  #     win.mvaddstr("I'm a subwindow", x: 1, y: 2)
-  #     win.mvaddstr("x: #{win.maxx}, y: #{win.maxy}", x: 1, y: 3)
-  #     win.refresh
-  #     win.notimeout(true)
-  #     win.getch
-  #   end
-  #
-  #   NCurses::Pad.open(height: 10, width: 20) do |pad|
-  #     pad.border
-  #     pad.mvaddstr("I'm a pad", x: 6, y: 4)
-  #     pad.refresh(0, 0, 1, 1, 11, 21)
-  #     pad.notimeout(true)
-  #     pad.getch
-  #   end
-  #
-  #   NCurses.notimeout(true)
-  #   NCurses.getch
-  # end
 end

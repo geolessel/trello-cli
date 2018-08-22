@@ -1,0 +1,17 @@
+name: trello
+version: 0.1.0
+
+authors:
+  - Geoffrey Lessel <geo@geoffreylessel.com>
+
+targets:
+  trello:
+    main: src/trello.cr
+
+dependencies:
+  ncurses:
+    path: ../crystal/ncurses.cr
+
+crystal: 0.26.0
+
+license: MIT

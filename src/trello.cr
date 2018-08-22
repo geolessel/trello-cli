@@ -50,21 +50,21 @@ module Trello
 
     def handle_key(key)
       case key
-      when NCurses::KeyCode::DOWN, 106 # J
+      when NCurses::KeyCode::DOWN, 'j'
         if @selected < @lines.size - 1
           @selected += 1
         end
-      when NCurses::KeyCode::UP, 107 # K
+      when NCurses::KeyCode::UP, 'k'
         if @selected > 0
           @selected -= 1
         end
-      when NCurses::KeyCode::RETURN, 108 # L
+      when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
         child = @child
         if child
           @active = false
           child.active = true
         end
-      when 113, 104 # Q, J
+      when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
         parent = @parent
         if parent
           @active = false

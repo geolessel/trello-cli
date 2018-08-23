@@ -64,6 +64,8 @@ module Trello
       win.border
       win.mvaddstr(title, x: 2, y: 0)
 
+      cyan = NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
+
       y = 0
 
       @options.each_with_index do |option, i|
@@ -76,10 +78,13 @@ module Trello
         if i == @selected
           if @active
             win.attron(NCurses::Attribute::STANDOUT)
+          else
+            win.attron(NCurses::Attribute::BOLD | cyan.attr)
           end
         end
         win.addnstr(option.value, width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
+        win.attroff(NCurses::Attribute::BOLD | cyan.attr)
       end
       win.refresh
     end
@@ -154,8 +159,7 @@ module Trello
       child = @child
       if child
         @active = false
-        child.path = "/boards/#{option.key}/lists"
-        child.params = "fields=name,shortUrl"
+        child.set_board_id(option.key) if child.is_a? ListsWindow
         child.activate!
       end
     end
@@ -168,6 +172,35 @@ module Trello
       super(x: 1, y: 17, height: 15, width: 25) do |win|
         win.title = "Lists"
       end
+    end
+
+    def set_board_id(id : String)
+      @path = "/boards/#{id}/lists"
+      @params = "fields=name,shortUrl"
+    end
+
+    def activate_child!(option : ListSelectOption)
+      child = @child
+      if child
+        @active = false
+        child.set_list_id(option.key) if child.is_a? CardsWindow
+        child.activate!
+      end
+    end
+  end
+
+  class CardsWindow < ListSelectWindow
+    property list_id : String = ""
+
+    def initialize
+      super(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28) do |win|
+        win.title = "Cards"
+      end
+    end
+
+    def set_list_id(id : String)
+      @path = "/lists/#{id}/cards"
+      @params = "fields=name,shortUrl"
     end
   end
 
@@ -184,9 +217,7 @@ module Trello
     lists = ListsWindow.new
     lists.link_parent(boards)
 
-    cards = ListSelectWindow.new x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28 do |win|
-      win.title = "Cards"
-    end
+    cards = CardsWindow.new
     cards.link_parent(lists)
 
     windows = [boards, lists, cards]

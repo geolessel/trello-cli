@@ -97,12 +97,7 @@ module Trello
       when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
         activate_child!(@options[@selected])
       when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
-        # you can't get a truthy value out of an instance variable
-        parent = @parent
-        if parent
-          @active = false
-          parent.active = true
-        end
+        activate_parent!
       else
         LOG.debug("Unhandled key: #{key}")
       end
@@ -122,9 +117,21 @@ module Trello
     end
 
     def activate!
+      @active = true
       json = API.get(@path, @params)
       json.as_a.each do |j|
         @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
+      end
+    end
+
+    def activate_parent!
+      # you can't get a truthy value out of an instance variable
+      parent = @parent
+      if parent
+        @options = [] of ListSelectOption
+        @selected = 0
+        @active = false
+        parent.active = true
       end
     end
 
@@ -133,7 +140,6 @@ module Trello
   end
 
   class BoardsWindow < ListSelectWindow
-
     def initialize
       super(x: 1, y: 1, height: 15, width: 25) do |win|
         win.path = "/members/me/boards"
@@ -148,9 +154,9 @@ module Trello
       child = @child
       if child
         @active = false
-        child.active = true
-        child.board_id = option.key
-        child.options = [ListSelectOption.new(key: "d", value: option.key)]
+        child.path = "/boards/#{option.key}/lists"
+        child.params = "fields=name,shortUrl"
+        child.activate!
       end
     end
   end
@@ -184,8 +190,6 @@ module Trello
     cards.link_parent(lists)
 
     windows = [boards, lists, cards]
-
-    selected = 0
 
     NCurses.refresh
     windows.each { |w| w.refresh }

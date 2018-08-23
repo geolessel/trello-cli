@@ -3,10 +3,12 @@
 require "ncurses"
 require "json"
 require "http/client"
-
+require "logger"
 
 module Trello
   VERSION = "0.1.0"
+
+  LOG = Logger.new(File.open("log.txt", "w"), level: Logger::DEBUG)
 
   class API
     SECRETS = JSON.parse(File.read(".secrets.json"))
@@ -19,23 +21,29 @@ module Trello
     end
   end
 
+  class ListSelectOption
+    getter key, value
+
+    def initialize(@key : String, @value : String)
+    end
+  end
 
   class ListSelectWindow
-    getter win, height, width, title, parent, child, selected, active
+    getter win, height, width, title, parent, child, selected, active, json
 
-    setter lines : Array(String)
     setter selected : Int8
     setter active : Bool
     setter title : String
     setter path : String
     setter params : String
+    setter options : Array(ListSelectOption)
+    setter board_id : String = ""
 
     WIDTH = 25
     HEIGHT = 15
 
     def initialize(x : Int32, y : Int32, height : Int32, width : Int32)
       @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
-      @lines = [] of String
       @selected = 0
       @width = width
       @height = height
@@ -43,6 +51,7 @@ module Trello
       @active = false
       @path = ""
       @params = ""
+      @options = [] of ListSelectOption
     end
 
     def initialize(x : Int32, y : Int32, height : Int32, width : Int32, &block)
@@ -56,7 +65,8 @@ module Trello
       win.mvaddstr(title, x: 2, y: 0)
 
       y = 0
-      @lines.each_with_index do |option, i|
+
+      @options.each_with_index do |option, i|
         if y >= height-2
           break
         end
@@ -68,7 +78,7 @@ module Trello
             win.attron(NCurses::Attribute::STANDOUT)
           end
         end
-        win.addnstr(option, width-2)
+        win.addnstr(option.value, width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
       end
       win.refresh
@@ -77,7 +87,7 @@ module Trello
     def handle_key(key)
       case key
       when NCurses::KeyCode::DOWN, 'j'
-        if @selected < @lines.size - 1
+        if @selected < @options.size - 1
           @selected += 1
         end
       when NCurses::KeyCode::UP, 'k'
@@ -85,12 +95,7 @@ module Trello
           @selected -= 1
         end
       when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
-        # you can't get a truthy value out of an instance variable
-        child = @child
-        if child
-          @active = false
-          child.active = true
-        end
+        activate_child!(@options[@selected])
       when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
         # you can't get a truthy value out of an instance variable
         parent = @parent
@@ -99,7 +104,7 @@ module Trello
           parent.active = true
         end
       else
-        @lines << "#{key}"
+        LOG.debug("Unhandled key: #{key}")
       end
     end
 
@@ -119,7 +124,43 @@ module Trello
     def activate!
       json = API.get(@path, @params)
       json.as_a.each do |j|
-        @lines << j.as_h["name"].to_s
+        @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
+      end
+    end
+
+    def activate_child!(option)
+    end
+  end
+
+  class BoardsWindow < ListSelectWindow
+
+    def initialize
+      super(x: 1, y: 1, height: 15, width: 25) do |win|
+        win.path = "/members/me/boards"
+        win.params = "fields=name,starred,shortUrl"
+        win.active = true
+        win.title = "Boards"
+      end
+    end
+
+    def activate_child!(option : ListSelectOption)
+      # you can't get a truthy value out of an instance variable
+      child = @child
+      if child
+        @active = false
+        child.active = true
+        child.board_id = option.key
+        child.options = [ListSelectOption.new(key: "d", value: option.key)]
+      end
+    end
+  end
+
+  class ListsWindow < ListSelectWindow
+    property board_id : String = ""
+
+    def initialize
+      super(x: 1, y: 17, height: 15, width: 25) do |win|
+        win.title = "Lists"
       end
     end
   end
@@ -131,17 +172,10 @@ module Trello
     NCurses.curs_set(0) # hide the cursor
     NCurses.keypad(true) # allows arrow and F# keys
 
-    boards = ListSelectWindow.new x: 1, y: 1, height: 15, width: 25 do |win|
-      win.path = "/members/me/boards"
-      win.params = "fields=name,starred,shortUrl"
-      win.active = true
-      win.title = "Boards"
-    end
+    boards = BoardsWindow.new
     boards.activate!
 
-    lists = ListSelectWindow.new x: 1, y: 17, height: 15, width: 25 do |win|
-      win.title = "Lists"
-    end
+    lists = ListsWindow.new
     lists.link_parent(boards)
 
     cards = ListSelectWindow.new x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28 do |win|

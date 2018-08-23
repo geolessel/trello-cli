@@ -10,14 +10,37 @@ module Trello
 
   LOG = Logger.new(File.open("log.txt", "w"), level: Logger::DEBUG)
 
+  class App
+    @@windows : Array(Window) = [] of Window
+
+    def self.windows=(windows : Array(Window))
+      @@windows = windows
+    end
+
+    def self.windows
+      @@windows
+    end
+
+    module Colors
+      extend self
+      def cyan
+       NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
+      end
+    end
+  end
+
   class API
     SECRETS = JSON.parse(File.read(".secrets.json"))
     API_ROOT = "https://api.trello.com/1/"
     CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
 
     def self.get(path : String, params : String)
-      response = HTTP::Client.get("#{API_ROOT}/#{path}?#{CREDENTIALS}&#{params}")
-      JSON.parse(response.body)
+      url = "#{API_ROOT}/#{path}?#{CREDENTIALS}&#{params}"
+      LOG.debug("Fetching URL: #{url}")
+      response = HTTP::Client.get(url)
+      json = JSON.parse(response.body)
+      LOG.debug("Fetched: #{json}")
+      json
     end
   end
 
@@ -28,7 +51,87 @@ module Trello
     end
   end
 
-  class ListSelectWindow
+  class CardDetail
+    getter name
+
+    def initialize(@id : String, @name : String)
+    end
+  end
+
+  abstract class Window
+    property active : Bool = false
+    property title : String = ""
+
+    def initialize(x : Int32, y : Int32, height : Int32, width : Int32)
+      @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
+      @width = width
+      @height = height
+    end
+
+    def refresh
+      @win.refresh
+    end
+
+    def link_parent(parent : Window)
+      @parent = parent
+      parent.link_child(self)
+    end
+
+    def activate_parent!
+      # you can't get a truthy value out of an instance variable
+      parent = @parent
+      if parent
+        @active = false
+        parent.active = true
+      end
+    end
+
+    def activate_child!(option)
+    end
+
+    def active?
+      @active
+    end
+
+    def activate!
+      @active = true
+    end
+  end
+
+  class DetailsWindow < Window
+    def initialize(@card : CardDetail)
+      initialize(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28) do |win|
+        win.title = card.name
+      end
+      App.windows << self
+    end
+
+    def initialize(x : Int32, y : Int32, height : Int32, width : Int32, &block)
+      initialize(x: x, y: y, height: height, width: width)
+      yield self
+    end
+
+    def refresh
+      @win.erase
+      @win.border
+      @win.attron(App::Colors.cyan.attr)
+      @win.mvaddstr(title, x: 2, y: 0)
+      @win.attroff(App::Colors.cyan.attr)
+      @win.refresh
+    end
+
+    def handle_key(key)
+      case key
+      when NCurses::KeyCode::LEFT, 'q', 'h'
+        @win.erase
+        @win.close
+        activate_parent!
+        App.windows.delete(self)
+      end
+    end
+  end
+
+  abstract class ListSelectWindow < Window
     getter win, height, width, title, parent, child, selected, active, json
 
     setter selected : Int8
@@ -66,8 +169,6 @@ module Trello
       win.border
       win.mvaddstr(title, x: 2, y: 0)
 
-      cyan = NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
-
       y = 0
 
       @options[@row_offset..height+@row_offset].each_with_index do |option, i|
@@ -81,19 +182,18 @@ module Trello
           if @active
             win.attron(NCurses::Attribute::STANDOUT)
           else
-            win.attron(NCurses::Attribute::BOLD | cyan.attr)
+            win.attron(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
           end
         end
         win.addnstr(option.value, width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
-        win.attroff(NCurses::Attribute::BOLD | cyan.attr)
+        win.attroff(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
       end
 
       win.refresh
     end
 
     def handle_key(key)
-      LOG.debug("range: #{@row_offset..height+@row_offset}; offset: #{@row_offset}; size: #{@options.size}; height: #{height}")
       case key
       when NCurses::KeyCode::DOWN, 'j'
         if @selected < height-3
@@ -108,48 +208,36 @@ module Trello
           @row_offset -= 1
         end
       when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
-        activate_child!(@options[@selected + @row_offset])
+        handle_select_next(@options[@selected + @row_offset])
       when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
-        activate_parent!
+        handle_select_previous
       else
         LOG.debug("Unhandled key: #{key}")
       end
     end
 
-    def link_parent(parent : ListSelectWindow)
-      @parent = parent
-      parent.link_child(self)
-    end
-
-    def link_child(child : ListSelectWindow)
+    def link_child(child : Window)
       @child = child
     end
 
-    def active?
-      @active
-    end
-
     def activate!
-      @active = true
-      json = API.get(@path, @params)
-      json.as_a.each do |j|
-        @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
-      end
-      LOG.debug("retrieved boards: #{@options.map{|o| o.value}}")
-    end
-
-    def activate_parent!
-      # you can't get a truthy value out of an instance variable
-      parent = @parent
-      if parent
-        @options = [] of ListSelectOption
-        @selected = 0
-        @active = false
-        parent.active = true
+      super
+      if !@path.empty?
+        json = API.get(@path, @params)
+        json.as_a.each do |j|
+          @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
+        end
       end
     end
 
-    def activate_child!(option)
+    def handle_select_previous
+      @options = [] of ListSelectOption
+      @selected = 0
+      activate_parent!
+    end
+
+    def handle_select_next(selected)
+      activate_child!(selected)
     end
   end
 
@@ -211,6 +299,15 @@ module Trello
       @path = "/lists/#{id}/cards"
       @params = "fields=name,shortUrl"
     end
+
+    def handle_select_next(selected)
+      card = CardDetail.new(id: selected.key, name: selected.value)
+
+      details = DetailsWindow.new(card: card)
+      details.link_parent(self)
+      details.activate!
+      @active = false
+    end
   end
 
   NCurses.open do
@@ -229,19 +326,19 @@ module Trello
     cards = CardsWindow.new
     cards.link_parent(lists)
 
-    windows = [boards, lists, cards]
+    App.windows = [boards, lists, cards] of Window
 
     NCurses.refresh
-    windows.each { |w| w.refresh }
+    App.windows.each { |w| w.refresh }
 
     while true
       NCurses.notimeout(true)
       key = NCurses.getch
-      active_window = windows.find(boards) { |w| w.active }
+      active_window = App.windows.find(boards) { |w| w.active }
       active_window.handle_key(key)
 
       NCurses.refresh
-      windows.each { |w| w.refresh }
+      App.windows.each { |w| w.refresh }
     end
   end
 end

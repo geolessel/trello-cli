@@ -39,6 +39,8 @@ module Trello
     setter options : Array(ListSelectOption)
     setter board_id : String = ""
 
+    property row_offset : Int32 = 0
+
     WIDTH = 25
     HEIGHT = 15
 
@@ -68,7 +70,7 @@ module Trello
 
       y = 0
 
-      @options.each_with_index do |option, i|
+      @options[@row_offset..height+@row_offset].each_with_index do |option, i|
         if y >= height-2
           break
         end
@@ -86,21 +88,27 @@ module Trello
         win.attroff(NCurses::Attribute::STANDOUT)
         win.attroff(NCurses::Attribute::BOLD | cyan.attr)
       end
+
       win.refresh
     end
 
     def handle_key(key)
+      LOG.debug("range: #{@row_offset..height+@row_offset}; offset: #{@row_offset}; size: #{@options.size}; height: #{height}")
       case key
       when NCurses::KeyCode::DOWN, 'j'
-        if @selected < @options.size - 1
+        if @selected < height-3
           @selected += 1
+        elsif @row_offset + height <= @options.size + 1
+          @row_offset += 1
         end
       when NCurses::KeyCode::UP, 'k'
         if @selected > 0
           @selected -= 1
+        elsif @row_offset > 0
+          @row_offset -= 1
         end
       when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
-        activate_child!(@options[@selected])
+        activate_child!(@options[@selected + @row_offset])
       when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
         activate_parent!
       else
@@ -127,6 +135,7 @@ module Trello
       json.as_a.each do |j|
         @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
       end
+      LOG.debug("retrieved boards: #{@options.map{|o| o.value}}")
     end
 
     def activate_parent!
@@ -228,7 +237,8 @@ module Trello
     while true
       NCurses.notimeout(true)
       key = NCurses.getch
-      windows.find(boards) { |w| w.active }.handle_key(key)
+      active_window = windows.find(boards) { |w| w.active }
+      active_window.handle_key(key)
 
       NCurses.refresh
       windows.each { |w| w.refresh }

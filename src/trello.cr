@@ -1,9 +1,24 @@
 # TODO: Write documentation for `Trello`
 
 require "ncurses"
+require "json"
+require "http/client"
+
 
 module Trello
   VERSION = "0.1.0"
+
+  class API
+    SECRETS = JSON.parse(File.read(".secrets.json"))
+    API_ROOT = "https://api.trello.com/1/"
+    CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
+
+    def self.get(path : String, params : String)
+      response = HTTP::Client.get("#{API_ROOT}/#{path}?#{CREDENTIALS}&#{params}")
+      JSON.parse(response.body)
+    end
+  end
+
 
   class ListSelectWindow
     getter win, height, width, title, parent, child, selected, active
@@ -11,21 +26,32 @@ module Trello
     setter lines : Array(String)
     setter selected : Int8
     setter active : Bool
+    setter title : String
+    setter path : String
+    setter params : String
 
     WIDTH = 25
     HEIGHT = 15
 
-    def initialize(x : Int32, y : Int32, height : Int32, width : Int32, title : String)
+    def initialize(x : Int32, y : Int32, height : Int32, width : Int32)
       @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
       @lines = [] of String
       @selected = 0
       @width = width
       @height = height
-      @title = title
+      @title = ""
       @active = false
+      @path = ""
+      @params = ""
+    end
+
+    def initialize(x : Int32, y : Int32, height : Int32, width : Int32, &block)
+      initialize(x: x, y: y, height: height, width: width)
+      yield self
     end
 
     def refresh
+      win.erase
       win.border
       win.mvaddstr(title, x: 2, y: 0)
 
@@ -59,12 +85,14 @@ module Trello
           @selected -= 1
         end
       when NCurses::KeyCode::RETURN, NCurses::KeyCode::RIGHT, 'l'
+        # you can't get a truthy value out of an instance variable
         child = @child
         if child
           @active = false
           child.active = true
         end
       when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
+        # you can't get a truthy value out of an instance variable
         parent = @parent
         if parent
           @active = false
@@ -87,6 +115,13 @@ module Trello
     def active?
       @active
     end
+
+    def activate!
+      json = API.get(@path, @params)
+      json.as_a.each do |j|
+        @lines << j.as_h["name"].to_s
+      end
+    end
   end
 
   NCurses.open do
@@ -96,16 +131,22 @@ module Trello
     NCurses.curs_set(0) # hide the cursor
     NCurses.keypad(true) # allows arrow and F# keys
 
-    boards = ListSelectWindow.new(x: 1, y: 1, height: 15, width: 25, title: "Boards")
-    boards.lines = ["Free Week", "People", "People History 2018"]
-    boards.active = true
+    boards = ListSelectWindow.new x: 1, y: 1, height: 15, width: 25 do |win|
+      win.path = "/members/me/boards"
+      win.params = "fields=name,starred,shortUrl"
+      win.active = true
+      win.title = "Boards"
+    end
+    boards.activate!
 
-    lists = ListSelectWindow.new(x: 1, y: 17, height: 15, width: 25, title: "Lists")
-    lists.lines = ["Free Week", "People", "People History 2018"]
+    lists = ListSelectWindow.new x: 1, y: 17, height: 15, width: 25 do |win|
+      win.title = "Lists"
+    end
     lists.link_parent(boards)
 
-    cards = ListSelectWindow.new(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28, title: "Cards")
-    cards.lines = ["Free Week", "People", "People History 2018"]
+    cards = ListSelectWindow.new x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28 do |win|
+      win.title = "Cards"
+    end
     cards.link_parent(lists)
 
     windows = [boards, lists, cards]

@@ -23,8 +23,9 @@ module Trello
 
     module Colors
       extend self
+
       def cyan
-       NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
+        NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
       end
     end
   end
@@ -52,20 +53,40 @@ module Trello
   end
 
   class CardDetail
-    getter name
+    getter id, name
+    property json : JSON::Any = JSON::Any.new("{}")
 
     def initialize(@id : String, @name : String)
+    end
+
+    def fetch
+      @json = API.get("/cards/#{@id}", "members=true")
+    end
+
+    def member_usernames
+      @json.as_h["members"].as_a.map { |m| m["username"].to_s }.join(", ")
+    end
+
+    def label_names
+      @json.as_h["labels"].as_a.map { |l| l["name"].to_s }.join(", ")
+    end
+
+    def description
+      @json.as_h["desc"].to_s
+    end
+
+    def description_and_comments
+      description
     end
   end
 
   abstract class Window
     property active : Bool = false
     property title : String = ""
+    getter height, width, x, y
 
-    def initialize(x : Int32, y : Int32, height : Int32, width : Int32)
+    def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
       @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
-      @width = width
-      @height = height
     end
 
     def refresh
@@ -114,9 +135,15 @@ module Trello
     def refresh
       @win.erase
       @win.border
-      @win.attron(App::Colors.cyan.attr)
-      @win.mvaddstr(title, x: 2, y: 0)
-      @win.attroff(App::Colors.cyan.attr)
+      @win.attron(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+      @win.mvaddstr(title, x: 1, y: 1)
+      @win.attroff(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+      @win.mvaddstr("Users: #{@card.member_usernames}", x: 1, y: 2)
+      @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
+      @win.mvhline(n: NCurses.maxx - 30, x: 1, y: 4, ch: '-')
+      NCurses::Window.derwin(parent: @win, x: 1, y: 5, height: @height - 5, width: @width - 2) do |sub|
+        sub.mvaddstr(@card.description_and_comments, x: 0, y: 1)
+      end
       @win.refresh
     end
 
@@ -128,6 +155,11 @@ module Trello
         activate_parent!
         App.windows.delete(self)
       end
+    end
+
+    def activate!
+      super
+      @card.fetch
     end
   end
 
@@ -147,11 +179,9 @@ module Trello
     WIDTH = 25
     HEIGHT = 15
 
-    def initialize(x : Int32, y : Int32, height : Int32, width : Int32)
-      @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
+    def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
+      @win = NCurses::Window.new(y: @y, x: @x, height: @height, width: @width)
       @selected = 0
-      @width = width
-      @height = height
       @title = ""
       @active = false
       @path = ""
@@ -159,8 +189,8 @@ module Trello
       @options = [] of ListSelectOption
     end
 
-    def initialize(x : Int32, y : Int32, height : Int32, width : Int32, &block)
-      initialize(x: x, y: y, height: height, width: width)
+    def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32, &block)
+      initialize(x: @x, y: @y, height: @height, width: @width)
       yield self
     end
 
@@ -244,7 +274,7 @@ module Trello
   class BoardsWindow < ListSelectWindow
     def initialize
       super(x: 1, y: 1, height: 15, width: 25) do |win|
-        win.path = "/members/me/boards"
+        win.path = "members/me/boards"
         win.params = "fields=name,starred,shortUrl"
         win.active = true
         win.title = "Boards"
@@ -272,7 +302,7 @@ module Trello
     end
 
     def set_board_id(id : String)
-      @path = "/boards/#{id}/lists"
+      @path = "boards/#{id}/lists"
       @params = "fields=name,shortUrl"
     end
 
@@ -296,7 +326,7 @@ module Trello
     end
 
     def set_list_id(id : String)
-      @path = "/lists/#{id}/cards"
+      @path = "lists/#{id}/cards"
       @params = "fields=name,shortUrl"
     end
 

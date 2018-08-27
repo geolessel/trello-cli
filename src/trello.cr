@@ -48,7 +48,6 @@ module Trello
       LOG.debug("Fetching URL: #{url}")
       response = HTTP::Client.get(url)
       json = JSON.parse(response.body)
-      LOG.debug("Fetched: #{json}")
       json
     end
   end
@@ -71,11 +70,19 @@ module Trello
     def title
       case type
       when "addMemberToCard"
-        "#{creator} added #{member} to the card at #{date}"
+        "#{creator} added #{member}"
       when "removeMemberFromCard"
-        "#{creator} removed #{member} from card at #{date}"
+        "#{creator} removed #{member}"
       when "commentCard"
-        "Comment by #{creator} at #{date}"
+        "Comment by #{creator}"
+      when "addAttachmentToCard"
+        "#{creator} attached #{attachment_name}"
+      when "addChecklistToCard"
+        "#{creator} added checklist: #{checklist_name}"
+      when "deleteAttachmentFromCard"
+        "#{creator} detached #{attachment_name}"
+      when "createCard"
+        "#{creator} created the card"
       else
         LOG.debug("unhandled action: #{type}")
         ""
@@ -85,9 +92,21 @@ module Trello
     def description
       case type
       when "commentCard"
-        @action["data"]["text"].to_s
+        <<-DESC
+        #{@action["data"]["text"]}
+        [ #{date} ]
+        DESC
+      when "addAttachmentToCard"
+        if @action["data"]["attachment"].as_h.fetch("url", false)
+         <<-DESC
+         #{@action["data"]["attachment"]["url"].to_s}
+         [ #{date} ]
+         DESC
+        else
+          "[ #{date} ]"
+        end
       else
-        ""
+        "[ #{date} ]"
       end
     end
 
@@ -102,6 +121,14 @@ module Trello
     def date
       @action["date"]
     end
+
+    def attachment_name
+      @action["data"]["attachment"]["name"]
+    end
+
+    def checklist_name
+      @action["data"]["checklist"]["name"]
+    end
   end
 
   class CardDetail
@@ -110,8 +137,12 @@ module Trello
 
     HANDLED_TYPES = [
       "addMemberToCard",
+      "addAttachmentToCard",
+      "addChecklistToCard",
       "commentCard",
-      "removeMemberFromCard"
+      "createCard",
+      "deleteAttachmentFromCard",
+      "removeMemberFromCard",
     ]
 
     def initialize(@id : String, @name : String, @window : Window)
@@ -119,6 +150,7 @@ module Trello
 
     def fetch
       @json = API.get("/cards/#{@id}", "members=true&actions=all&actions_limit=1000")
+      LOG.debug("Unhandled types: #{@json.as_h["actions"].as_a.reject { |a| HANDLED_TYPES.includes?(a["type"].to_s) }.map{|a| a["type"]}.uniq.join(", ")}")
     end
 
     def member_usernames
@@ -134,7 +166,7 @@ module Trello
     end
 
     def activities
-      str = @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
+      @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
     end
   end
 
@@ -204,7 +236,7 @@ module Trello
       @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
       @win.refresh
 
-      NCurses::Pad.open(height: 1000, width: @width) do |pad|
+      NCurses::Pad.open(height: 1000, width: @width - 1) do |pad|
         pad.mvaddstr(@card.description, x: 0, y: 0)
         pad.attron(App::Colors.green.attr)
         pad.addstr("\n\n--|   ACTIVITY   |--")
@@ -237,13 +269,13 @@ module Trello
         end
       when NCurses::KeyCode::DOWN, 'j'
         @row += 1
-      when 'd'
-        @row += 5
+      when ' ', 'd'
+        @row += 10
+      when 'u'
+        @row -= 10
         if @row < 0
           @row = 0
         end
-      when 'u'
-        @row -= 5
       end
     end
 

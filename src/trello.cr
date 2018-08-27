@@ -27,6 +27,14 @@ module Trello
       def cyan
         NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
       end
+
+      def blue
+        NCurses::ColorPair.new(2).init(NCurses::Color::BLUE, NCurses::Color::BLACK)
+      end
+
+      def green
+        NCurses::ColorPair.new(3).init(NCurses::Color::GREEN, NCurses::Color::BLACK)
+      end
     end
   end
 
@@ -56,11 +64,11 @@ module Trello
     getter id, name
     property json : JSON::Any = JSON::Any.new("{}")
 
-    def initialize(@id : String, @name : String)
+    def initialize(@id : String, @name : String, @window : Window)
     end
 
     def fetch
-      @json = API.get("/cards/#{@id}", "members=true")
+      @json = API.get("/cards/#{@id}", "members=true&actions=all&actions_limit=1000")
     end
 
     def member_usernames
@@ -75,18 +83,29 @@ module Trello
       @json.as_h["desc"].to_s
     end
 
-    def description_and_comments
-      description
+    def activities
+      str = @json.as_h["actions"].as_a.map { |action| action_string(action) }.compact
+      str = str.join("\n\n\n")
+    end
+
+    def action_string(action)
+      case action["type"].to_s
+      when "commentCard"
+        LOG.debug("Comment: #{action["data"]["text"].to_s}")
+        "--[ Comment by #{action["memberCreator"]["username"]} at #{action["date"]} ]--\n#{action["data"]["text"].to_s}"
+      else
+        LOG.debug("unhandled action: #{action["type"].to_s}")
+      end
     end
   end
 
   abstract class Window
     property active : Bool = false
     property title : String = ""
-    getter height, width, x, y
+    getter height, width, x, y, win
 
     def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
-      @win = NCurses::Window.new(y: y, x: x, height: height, width: width)
+      @win = NCurses::Window.new(y: @y, x: @x, height: @height, width: @width)
     end
 
     def refresh
@@ -135,14 +154,20 @@ module Trello
     def refresh
       @win.erase
       @win.border
-      @win.attron(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+      @win.attron(NCurses::Attribute::BOLD | App::Colors.blue.attr)
       @win.mvaddstr(title, x: 1, y: 1)
-      @win.attroff(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+      @win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
       @win.mvaddstr("Users: #{@card.member_usernames}", x: 1, y: 2)
       @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
-      @win.mvhline(n: NCurses.maxx - 30, x: 1, y: 4, ch: '-')
+      @win.mvhline(n: NCurses.maxx - 30, x: 1, y: 4, ch: '=')
       NCurses::Window.derwin(parent: @win, x: 1, y: 5, height: @height - 5, width: @width - 2) do |sub|
-        sub.mvaddstr(@card.description_and_comments, x: 0, y: 1)
+        sub.mvaddstr(@card.description, x: 0, y: 1)
+        sub.attron(App::Colors.green.attr)
+        sub.addstr("\n\n--[   ACTIVITY   ]--")
+        sub.addstr((21..@width - 2).map { "-" }.join)
+        sub.attroff(App::Colors.green.attr)
+        sub.addstr("\n\n")
+        sub.addstr(@card.activities)
       end
       @win.refresh
     end
@@ -212,12 +237,12 @@ module Trello
           if @active
             win.attron(NCurses::Attribute::STANDOUT)
           else
-            win.attron(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+            win.attron(NCurses::Attribute::BOLD | App::Colors.blue.attr)
           end
         end
         win.addnstr(option.value, width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
-        win.attroff(NCurses::Attribute::BOLD | App::Colors.cyan.attr)
+        win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
       end
 
       win.refresh
@@ -257,6 +282,7 @@ module Trello
         json.as_a.each do |j|
           @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
         end
+        @options << ListSelectOption.new(key: "💩", value: "💩")
       end
     end
 
@@ -331,7 +357,7 @@ module Trello
     end
 
     def handle_select_next(selected)
-      card = CardDetail.new(id: selected.key, name: selected.value)
+      card = CardDetail.new(id: selected.key, name: selected.value, window: self)
 
       details = DetailsWindow.new(card: card)
       details.link_parent(self)
@@ -340,6 +366,7 @@ module Trello
     end
   end
 
+  LibNCurses.setlocale(0, "") # enable unicode
   NCurses.open do
     NCurses.start_color
     NCurses.cbreak # CTRL-C breaks the program

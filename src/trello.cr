@@ -60,9 +60,59 @@ module Trello
     end
   end
 
+  class CardAction
+    def initialize(@action : JSON::Any)
+    end
+
+    def type
+      @action["type"].to_s
+    end
+
+    def title
+      case type
+      when "addMemberToCard"
+        "#{creator} added #{member} to the card at #{date}"
+      when "removeMemberFromCard"
+        "#{creator} removed #{member} from card at #{date}"
+      when "commentCard"
+        "Comment by #{creator} at #{date}"
+      else
+        LOG.debug("unhandled action: #{type}")
+        ""
+      end
+    end
+
+    def description
+      case type
+      when "commentCard"
+        @action["data"]["text"].to_s
+      else
+        ""
+      end
+    end
+
+    def creator
+      @action["memberCreator"]["username"]
+    end
+
+    def member
+      @action["member"]["username"]
+    end
+
+    def date
+      @action["date"]
+    end
+  end
+
   class CardDetail
     getter id, name
     property json : JSON::Any = JSON::Any.new("{}")
+
+    HANDLED_TYPES = [
+      "addMemberToCard",
+      "commentCard",
+      "removeMemberFromCard"
+    ]
 
     def initialize(@id : String, @name : String, @window : Window)
     end
@@ -84,19 +134,7 @@ module Trello
     end
 
     def activities
-      str = @json.as_h["actions"].as_a.map { |action| action_string(action) }.compact
-      str = str.join("\n\n\n")
-    end
-
-    def action_string(action)
-      case action["type"].to_s
-      when "commentCard"
-        LOG.debug("Comment: #{action["data"]["text"].to_s}")
-        "--[ Comment by #{action["memberCreator"]["username"]} at #{action["date"]} ]--\n#{action["data"]["text"].to_s}"
-      else
-        LOG.debug("unhandled action: #{action["type"].to_s}")
-        nil
-      end
+      str = @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
     end
   end
 
@@ -169,11 +207,18 @@ module Trello
       NCurses::Pad.open(height: 1000, width: @width) do |pad|
         pad.mvaddstr(@card.description, x: 0, y: 0)
         pad.attron(App::Colors.green.attr)
-        pad.addstr("\n\n--[   ACTIVITY   ]--")
+        pad.addstr("\n\n--|   ACTIVITY   |--")
         pad.addstr((21..@width - 2).map { "-" }.join)
         pad.attroff(App::Colors.green.attr)
         pad.addstr("\n\n")
-        pad.addstr(@card.activities)
+        @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
+          pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
+          pad.addstr(activity.title)
+          pad.attroff(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
+          pad.addstr("\n")
+          pad.addstr(activity.description)
+          pad.addstr("\n\n\n")
+        end
         pad.refresh(@row, 0, 6, 28, NCurses.maxy - 3, NCurses.maxx - 2)
       end
     end

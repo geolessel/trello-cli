@@ -95,6 +95,7 @@ module Trello
         "--[ Comment by #{action["memberCreator"]["username"]} at #{action["date"]} ]--\n#{action["data"]["text"].to_s}"
       else
         LOG.debug("unhandled action: #{action["type"].to_s}")
+        nil
       end
     end
   end
@@ -102,6 +103,7 @@ module Trello
   abstract class Window
     property active : Bool = false
     property title : String = ""
+    property visible : Bool = true
     getter height, width, x, y, win
 
     def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
@@ -123,6 +125,7 @@ module Trello
       if parent
         @active = false
         parent.active = true
+        parent.visible = true
       end
     end
 
@@ -139,8 +142,10 @@ module Trello
   end
 
   class DetailsWindow < Window
+    property row : Int32 = 0
+
     def initialize(@card : CardDetail)
-      initialize(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28) do |win|
+      initialize(x: 27, y: 1, height: 5, width: NCurses.maxx - 28) do |win|
         win.title = card.name
       end
       App.windows << self
@@ -159,17 +164,18 @@ module Trello
       @win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
       @win.mvaddstr("Users: #{@card.member_usernames}", x: 1, y: 2)
       @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
-      @win.mvhline(n: NCurses.maxx - 30, x: 1, y: 4, ch: '=')
-      NCurses::Window.derwin(parent: @win, x: 1, y: 5, height: @height - 5, width: @width - 2) do |sub|
-        sub.mvaddstr(@card.description, x: 0, y: 1)
-        sub.attron(App::Colors.green.attr)
-        sub.addstr("\n\n--[   ACTIVITY   ]--")
-        sub.addstr((21..@width - 2).map { "-" }.join)
-        sub.attroff(App::Colors.green.attr)
-        sub.addstr("\n\n")
-        sub.addstr(@card.activities)
-      end
       @win.refresh
+
+      NCurses::Pad.open(height: 1000, width: @width) do |pad|
+        pad.mvaddstr(@card.description, x: 0, y: 0)
+        pad.attron(App::Colors.green.attr)
+        pad.addstr("\n\n--[   ACTIVITY   ]--")
+        pad.addstr((21..@width - 2).map { "-" }.join)
+        pad.attroff(App::Colors.green.attr)
+        pad.addstr("\n\n")
+        pad.addstr(@card.activities)
+        pad.refresh(@row, 0, 6, 28, NCurses.maxy - 3, NCurses.maxx - 2)
+      end
     end
 
     def handle_key(key)
@@ -179,6 +185,20 @@ module Trello
         @win.close
         activate_parent!
         App.windows.delete(self)
+      when NCurses::KeyCode::UP, 'k'
+        @row -= 1
+        if @row > 0
+          @row = 0
+        end
+      when NCurses::KeyCode::DOWN, 'j'
+        @row += 1
+      when 'd'
+        @row += 5
+        if @row < 0
+          @row = 0
+        end
+      when 'u'
+        @row -= 5
       end
     end
 
@@ -282,7 +302,6 @@ module Trello
         json.as_a.each do |j|
           @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
         end
-        @options << ListSelectOption.new(key: "💩", value: "💩")
       end
     end
 
@@ -363,6 +382,9 @@ module Trello
       details.link_parent(self)
       details.activate!
       @active = false
+      @visible = false
+      @win.erase
+      @win.refresh
     end
   end
 
@@ -395,7 +417,7 @@ module Trello
       active_window.handle_key(key)
 
       NCurses.refresh
-      App.windows.each { |w| w.refresh }
+      App.windows.select { |w| w.visible }.each { |w| w.refresh }
     end
   end
 end

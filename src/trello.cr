@@ -83,6 +83,8 @@ module Trello
         "#{creator} detached #{attachment_name}"
       when "createCard"
         "#{creator} created the card"
+      when "updateCheckItemStateOnCard"
+        "#{creator} marked #{checklist_name}: #{checklist_item} as #{checklist_item_status}"
       else
         LOG.debug("unhandled action: #{type}")
         ""
@@ -129,6 +131,14 @@ module Trello
     def checklist_name
       @action["data"]["checklist"]["name"]
     end
+
+    def checklist_item
+      @action["data"]["checkItem"]["name"]
+    end
+
+    def checklist_item_status
+      @action["data"]["checkItem"]["state"]
+    end
   end
 
   class CardDetail
@@ -143,6 +153,7 @@ module Trello
       "createCard",
       "deleteAttachmentFromCard",
       "removeMemberFromCard",
+      "updateCheckItemStateOnCard",
     ]
 
     def initialize(@id : String, @name : String, @window : Window)

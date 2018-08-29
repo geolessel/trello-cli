@@ -11,7 +11,27 @@ module Trello
   LOG = Logger.new(File.open("log.txt", "w"), level: Logger::DEBUG)
 
   class App
+    SECRETS = JSON.parse(File.read(".secrets.json"))
+    CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
+    MEMBER_ID = SECRETS["memberId"]
+
     @@windows : Array(Window) = [] of Window
+
+    def self.activate_window(window : Window)
+      @@active_window = window
+    end
+
+    def self.active_window
+      @@active_window || @@windows.find { |w| w.active } || @@windows.first
+    end
+
+    def self.add_window(window : Window)
+      @@windows << window
+    end
+
+    def self.remove_window(window : Window)
+      @@windows.delete(window)
+    end
 
     def self.windows=(windows : Array(Window))
       @@windows = windows
@@ -39,16 +59,20 @@ module Trello
   end
 
   class API
-    SECRETS = JSON.parse(File.read(".secrets.json"))
     API_ROOT = "https://api.trello.com/1/"
-    CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
 
     def self.get(path : String, params : String)
-      url = "#{API_ROOT}/#{path}?#{CREDENTIALS}&#{params}"
-      LOG.debug("Fetching URL: #{url}")
+      url = "#{API_ROOT}/#{path}?#{App::CREDENTIALS}&#{params}"
+      LOG.debug("GETting URL: #{url}")
       response = HTTP::Client.get(url)
       json = JSON.parse(response.body)
       json
+    end
+
+    def self.post(path : String, params : String)
+      url = "#{API_ROOT}/#{path}?#{App::CREDENTIALS}&#{params}"
+      LOG.debug("POSTing URL: #{url}")
+      response = HTTP::Client.post(url, body: params)
     end
   end
 
@@ -179,6 +203,15 @@ module Trello
     def activities
       @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
     end
+
+    def add_self_as_member
+      response = API.post("/cards/#{@id}/idMembers", "value=#{App::MEMBER_ID}")
+      if response.success?
+        fetch
+      else
+        LOG.debug("failed to add self as member: #{response.inspect}")
+      end
+    end
   end
 
   abstract class Window
@@ -187,19 +220,27 @@ module Trello
     property visible : Bool = true
     property height : Int32
     property width : Int32
+    property border : Bool = false
     getter x, y, win
 
-    def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
+    def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32, @border : Bool = false)
       @win = NCurses::Window.new(y: @y, x: @x, height: @height, width: @width)
     end
 
     def refresh
+      @win.erase
+      @win.border if @border
+      @win.mvaddstr(@title, x: 2, y: 0) if @title
       @win.refresh
     end
 
     def link_parent(parent : Window)
       @parent = parent
       parent.link_child(self)
+    end
+
+    def link_child(child : Window)
+      @child = child
     end
 
     def activate_parent!
@@ -209,6 +250,7 @@ module Trello
         @active = false
         parent.active = true
         parent.visible = true
+        App.activate_window(parent)
       end
     end
 
@@ -220,6 +262,7 @@ module Trello
     end
 
     def activate!
+      App.activate_window(self)
       @active = true
     end
 
@@ -283,7 +326,7 @@ module Trello
         @win.erase
         @win.close
         activate_parent!
-        App.windows.delete(self)
+        App.remove_window(self)
       when NCurses::KeyCode::UP, 'k'
         @row -= 1
         if @row < 0
@@ -297,6 +340,13 @@ module Trello
         @row -= 10
         if @row < 0
           @row = 0
+        end
+      when 'a'
+        @card.add_self_as_member
+      when '?'
+        HelpWindow.new do |win|
+          win.link_parent(self)
+          win.add_help(key: "a", description: "Add yourself as a member of this card")
         end
       end
     end
@@ -392,10 +442,6 @@ module Trello
       end
     end
 
-    def link_child(child : Window)
-      @child = child
-    end
-
     def activate!
       super
       if !@path.empty?
@@ -479,6 +525,60 @@ module Trello
     end
   end
 
+  class HelpWindow < Window
+    property helps : Array(NamedTuple(key: String, description: String)) = [] of NamedTuple(key: String, description: String)
+
+    def initialize(&block)
+      initialize(x: NCurses.maxx / 4, y: NCurses.maxy / 4, height: NCurses.maxy / 2, width: NCurses.maxx / 2) do |win|
+        win.title = "Help"
+        win.active = true
+        yield win
+      end
+      App.add_window(self)
+      App.activate_window(self)
+    end
+
+    def initialize(x : Int32, y : Int32, height : Int32, width : Int32, &block)
+      initialize(x: x, y: y, height: height, width: width, border: true)
+      yield self
+    end
+
+    def add_help(key : String, description : String)
+      @helps << {key: key, description: description}
+    end
+
+    def refresh
+      @win.erase
+      @win.border
+      @win.mvaddstr(@title, x: 2, y: 0) if @title
+      @win.refresh
+
+      NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
+        @helps.each do |help|
+          pad.attron(App::Colors.green.attr)
+          pad.addstr(help[:key])
+          pad.attroff(App::Colors.green.attr)
+
+          pad.addstr(" -- ")
+          pad.addstr(help[:description])
+          pad.addstr("\n")
+        end
+
+        pad.refresh(0, 0, @y+2, @x+2, @height, @width)
+      end
+    end
+
+    def handle_key(_key)
+      parent = @parent
+      if parent
+        App.activate_window(parent)
+      end
+      App.remove_window(self)
+      @win.erase
+      @win.close
+    end
+  end
+
   class CardsWindow < ListSelectWindow
     property list_id : String = ""
 
@@ -540,8 +640,7 @@ module Trello
       if key == NCurses::KeyCode::RESIZE
         App.windows.each { |w| w.resize }
       else
-        active_window = App.windows.find(boards) { |w| w.active }
-        active_window.handle_key(key)
+        App.active_window.handle_key(key)
       end
 
       NCurses.refresh

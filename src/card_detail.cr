@@ -40,12 +40,25 @@ class CardDetail
     @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
   end
 
+  def board_id
+    @json.as_h["idBoard"].to_s
+  end
+
   def add_self_as_member
     response = API.post("/cards/#{@id}/idMembers", "value=#{App::MEMBER_ID}")
     if response.success?
       fetch
     else
       App::LOG.debug("failed to add self as member: #{response.inspect}")
+    end
+  end
+
+  def add_label(label_id : String)
+    response = API.post("/cards/#{@id}/idLabels", "value=#{label_id}")
+    if response.success?
+      fetch
+    else
+      App::LOG.debug("failed to add label to card: #{response.inspect}")
     end
   end
 end

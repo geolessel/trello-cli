@@ -75,7 +75,14 @@ class DetailsWindow < Window
       end
     when 'a'
       @card.add_self_as_member
-    when 'L'
+    when 76, 'L'
+      LabelSelectWindow.new(board_id: @card.board_id) do |win|
+        win.link_parent(self)
+        win.on_select = ->(label_id : String) do
+          @card.add_label(label_id)
+          return
+        end
+      end
       # @card.add_label
     when '?'
       HelpWindow.new do |win|

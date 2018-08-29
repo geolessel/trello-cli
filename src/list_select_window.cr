@@ -3,7 +3,7 @@ require "./app"
 require "./window"
 require "./list_select_option"
 
-abstract class ListSelectWindow < Window
+class ListSelectWindow < Window
   getter win, height, width, title, parent, child, selected, active, json
 
   setter selected : Int8

@@ -83,13 +83,21 @@ class DetailsWindow < Window
           return
         end
       end
-      # @card.add_label
     when 'o'
       `open #{@card.short_url}`
+    when 'm'
+      ListSelectWindow.new(board_id: @card.board_id) do |win|
+        win.link_parent(self)
+        win.on_select = ->(list_id : String) do
+          @card.move_to_list(list_id)
+          return
+        end
+      end
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
         win.add_help(key: "a", description: "Add yourself as a member of this card")
+        win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "o", description: "Open this card in your web browser")
         win.add_help(key: "shift-l", description: "Add a label to this card")
       end

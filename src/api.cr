@@ -16,6 +16,12 @@ class API
   def self.post(path : String, params : String)
     url = "#{API_ROOT}/#{path}?#{App::CREDENTIALS}&#{params}"
     App::LOG.debug("POSTing URL: #{url}")
-    response = HTTP::Client.post(url, body: params)
+    response = HTTP::Client.post(url)
+  end
+
+  def self.put(path : String, params : String)
+    url = "#{API_ROOT}/#{path}?#{App::CREDENTIALS}&#{params}"
+    App::LOG.debug("PUTting URL: #{url}")
+    response = HTTP::Client.put(url)
   end
 end

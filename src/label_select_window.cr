@@ -1,6 +1,6 @@
 require "./api"
 
-class LabelSelectWindow < ListSelectWindow
+class LabelSelectWindow < OptionSelectWindow
   property on_select : (String -> IO) | (String -> Nil) = ->(label_id : String) { }
   # @on_select : String -> IO) = ->(label_id : String) {}
 
@@ -20,7 +20,7 @@ class LabelSelectWindow < ListSelectWindow
     if !@path.empty?
       json = API.get(@path, @params)
       json.as_a.each do |j|
-        @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
+        @options << OptionSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
       end
     end
   end

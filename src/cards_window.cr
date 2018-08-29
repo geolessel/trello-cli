@@ -1,7 +1,7 @@
-require "./details_window"
+require "./option_select_window"
 require "./card_detail"
 
-class CardsWindow < ListSelectWindow
+class CardsWindow < OptionSelectWindow
   property list_id : String = ""
 
   def initialize

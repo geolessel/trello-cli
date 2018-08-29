@@ -1,7 +1,7 @@
-require "./list_select_window"
+require "./option_select_window"
 require "./lists_window"
 
-class BoardsWindow < ListSelectWindow
+class BoardsWindow < OptionSelectWindow
   def initialize
     super(x: 1, y: 1, height: 15, width: 25) do |win|
       win.path = "members/me/boards"
@@ -11,7 +11,7 @@ class BoardsWindow < ListSelectWindow
     end
   end
 
-  def activate_child!(option : ListSelectOption)
+  def activate_child!(option : OptionSelectOption)
     # you can't get a truthy value out of an instance variable
     child = @child
     if child
@@ -33,7 +33,7 @@ class BoardsWindow < ListSelectWindow
           a["name"].to_s <=> b["name"].to_s
         end
       end.each do |j|
-        @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["starred"].to_s == "true" ? "★  #{j.as_h["name"]}" : j.as_h["name"].to_s)
+        @options << OptionSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["starred"].to_s == "true" ? "★  #{j.as_h["name"]}" : j.as_h["name"].to_s)
       end
     end
   end

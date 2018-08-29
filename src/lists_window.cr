@@ -1,7 +1,7 @@
-require "./list_select_option"
+require "./option_select_option"
 require "./cards_window"
 
-class ListsWindow < ListSelectWindow
+class ListsWindow < OptionSelectWindow
   property board_id : String = ""
 
   def initialize
@@ -15,7 +15,7 @@ class ListsWindow < ListSelectWindow
     @params = "fields=name,shortUrl"
   end
 
-  def activate_child!(option : ListSelectOption)
+  def activate_child!(option : OptionSelectOption)
     child = @child
     if child
       @active = false

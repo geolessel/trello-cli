@@ -65,4 +65,13 @@ class CardDetail
       App::LOG.debug("failed to add label to card: #{response.inspect}")
     end
   end
+
+  def move_to_list(list_id : String)
+    response = API.put("cards/#{@id}/idList", "value=#{list_id}")
+    if response.success?
+      fetch
+    else
+      App::LOG.debug("failed to move card to list: #{response.inspect}")
+    end
+  end
 end

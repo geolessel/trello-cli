@@ -99,14 +99,23 @@ class DetailsWindow < Window
           return
         end
       end
+    when 'A'
+      AttachmentSelectWindow.new(card_id: @card.id) do |win|
+        win.link_parent(self)
+        win.on_select = ->(attachment_url : String) do
+          `open #{attachment_url}`
+          return
+        end
+      end
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
         win.add_help(key: "a", description: "Add yourself as a member of this card")
+        win.add_help(key: "shift-a", description: "Open an attachment in your browser")
+        win.add_help(key: "shift-l", description: "Add a label to this card")
         win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "o", description: "Open this card in your web browser")
         win.add_help(key: "r", description: "Refresh the details")
-        win.add_help(key: "shift-l", description: "Add a label to this card")
       end
     end
   end

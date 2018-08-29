@@ -40,7 +40,7 @@ class HelpWindow < Window
         pad.addstr("\n")
       end
 
-      pad.refresh(0, 0, @y+2, @x+2, @height, @width)
+      pad.refresh(0, 0, @y+2, @x+2, @height, @width + @x - 2)
     end
   end
 

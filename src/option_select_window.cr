@@ -83,6 +83,13 @@ class OptionSelectWindow < Window
       handle_select_next(@options[@selected + @row_offset])
     when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
       handle_select_previous
+    when 'r'
+      fetch
+    when '?'
+      HelpWindow.new do |win|
+        win.link_parent(self)
+        win.add_help(key: "r", description: "Refresh the details")
+      end
     else
       App::LOG.debug("Unhandled key: #{key}")
     end
@@ -90,7 +97,12 @@ class OptionSelectWindow < Window
 
   def activate!
     super
+    fetch
+  end
+
+  def fetch
     if !@path.empty?
+      @options = [] of OptionSelectOption
       json = API.get(@path, @params)
       json.as_a.each do |j|
         @options << OptionSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)

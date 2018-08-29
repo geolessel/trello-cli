@@ -99,6 +99,7 @@ class DetailsWindow < Window
         win.add_help(key: "a", description: "Add yourself as a member of this card")
         win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "o", description: "Open this card in your web browser")
+        win.add_help(key: "r", description: "Refresh the details")
         win.add_help(key: "shift-l", description: "Add a label to this card")
       end
     end

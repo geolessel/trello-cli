@@ -84,6 +84,8 @@ class DetailsWindow < Window
         end
       end
       # @card.add_label
+    when 'o'
+      `open #{@card.short_url}`
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)

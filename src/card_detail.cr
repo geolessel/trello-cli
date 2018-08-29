@@ -44,6 +44,10 @@ class CardDetail
     @json.as_h["idBoard"].to_s
   end
 
+  def short_url
+    @json.as_h["shortUrl"].to_s
+  end
+
   def add_self_as_member
     response = API.post("/cards/#{@id}/idMembers", "value=#{App::MEMBER_ID}")
     if response.success?

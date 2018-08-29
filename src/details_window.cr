@@ -36,10 +36,16 @@ class DetailsWindow < Window
     NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
       pad.mvaddstr(@card.description, x: 0, y: 0)
       pad.attron(App::Colors.green.attr)
-      pad.addstr("\n\n--|   ACTIVITY   |--")
-      pad.addstr((21..@width - 2).map { "-" }.join)
+      pad.addstr("\n\n--|   Attachments   |--\n")
       pad.attroff(App::Colors.green.attr)
-      pad.addstr("\n\n")
+      @card.attachments.each do |attachment|
+        pad.addstr("#{attachment["name"].to_s}\n")
+        # pad.addstr("  #{attachment["url"].to_s}\n")
+      end
+
+      pad.attron(App::Colors.green.attr)
+      pad.addstr("\n\n--|   Activity   |--\n")
+      pad.attroff(App::Colors.green.attr)
       @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
         pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
         pad.addstr(activity.title)

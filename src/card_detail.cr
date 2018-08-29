@@ -20,8 +20,8 @@ class CardDetail
   end
 
   def fetch
-    @json = API.get("/cards/#{@id}", "members=true&actions=all&actions_limit=1000")
-    App::LOG.debug("Unhandled types: #{@json.as_h["actions"].as_a.reject { |a| HANDLED_TYPES.includes?(a["type"].to_s) }.map{|a| a["type"]}.uniq.join(", ")}")
+    @json = API.get("/cards/#{@id}", "members=true&attachments=true&actions=all&actions_limit=1000")
+    # App::LOG.debug("Unhandled types: #{@json.as_h["actions"].as_a.reject { |a| HANDLED_TYPES.includes?(a["type"].to_s) }.map{|a| a["type"]}.uniq.join(", ")}")
   end
 
   def member_usernames
@@ -38,6 +38,10 @@ class CardDetail
 
   def activities
     @json.as_h["actions"].as_a.select { |a| HANDLED_TYPES.includes?(a.["type"].to_s) }
+  end
+
+  def attachments
+    @json.as_h["attachments"].as_a
   end
 
   def board_id

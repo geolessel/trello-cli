@@ -185,7 +185,9 @@ module Trello
     property active : Bool = false
     property title : String = ""
     property visible : Bool = true
-    getter height, width, x, y, win
+    property height : Int32
+    property width : Int32
+    getter x, y, win
 
     def initialize(@x : Int32, @y : Int32, @height : Int32, @width : Int32)
       @win = NCurses::Window.new(y: @y, x: @x, height: @height, width: @width)
@@ -220,6 +222,10 @@ module Trello
     def activate!
       @active = true
     end
+
+    def resize
+      # noop
+    end
   end
 
   class DetailsWindow < Window
@@ -237,6 +243,11 @@ module Trello
       yield self
     end
 
+    def resize
+      @width = NCurses.maxx - 28
+      @win.resize(height: @height, width: @width)
+    end
+
     def refresh
       @win.erase
       @win.border
@@ -247,7 +258,7 @@ module Trello
       @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
       @win.refresh
 
-      NCurses::Pad.open(height: 1000, width: @width - 1) do |pad|
+      NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
         pad.mvaddstr(@card.description, x: 0, y: 0)
         pad.attron(App::Colors.green.attr)
         pad.addstr("\n\n--|   ACTIVITY   |--")
@@ -275,7 +286,7 @@ module Trello
         App.windows.delete(self)
       when NCurses::KeyCode::UP, 'k'
         @row -= 1
-        if @row > 0
+        if @row < 0
           @row = 0
         end
       when NCurses::KeyCode::DOWN, 'j'
@@ -343,14 +354,16 @@ module Trello
 
         if i == @selected
           if @active
-            win.attron(NCurses::Attribute::STANDOUT)
+            # win.attron(NCurses::Attribute::STANDOUT)
+            win.attron( App::Colors.blue.attr | NCurses::Attribute::REVERSE)
           else
-            win.attron(NCurses::Attribute::BOLD | App::Colors.blue.attr)
+            win.attron( App::Colors.blue.attr)
           end
         end
-        win.addnstr(option.value, width-2)
+        win.addnstr(option.value, @width-2)
         win.attroff(NCurses::Attribute::STANDOUT)
         win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
+        win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr | NCurses::Attribute::REVERSE)
       end
 
       win.refresh
@@ -423,6 +436,23 @@ module Trello
         child.activate!
       end
     end
+
+    def activate!
+      if !@path.empty?
+        json = API.get(@path, @params)
+        json.as_a.sort do |a, b|
+          if a["starred"].to_s == "true" && b["starred"].to_s == "false"
+            -1
+          elsif ["starred"].to_s == "false" && b["starred"].to_s == "true"
+            1
+          else
+            a["name"].to_s <=> b["name"].to_s
+          end
+        end.each do |j|
+          @options << ListSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["starred"].to_s == "true" ? "★  #{j.as_h["name"]}" : j.as_h["name"].to_s)
+        end
+      end
+    end
   end
 
   class ListsWindow < ListSelectWindow
@@ -456,6 +486,12 @@ module Trello
       super(x: 27, y: 1, height: NCurses.maxy - 2, width: NCurses.maxx - 28) do |win|
         win.title = "Cards"
       end
+    end
+
+    def resize
+      @height = NCurses.maxy - 2
+      @width = NCurses.maxx - 28
+      @win.resize(height: @height, width: @width)
     end
 
     def set_list_id(id : String)
@@ -501,8 +537,12 @@ module Trello
     while true
       NCurses.notimeout(true)
       key = NCurses.getch
-      active_window = App.windows.find(boards) { |w| w.active }
-      active_window.handle_key(key)
+      if key == NCurses::KeyCode::RESIZE
+        App.windows.each { |w| w.resize }
+      else
+        active_window = App.windows.find(boards) { |w| w.active }
+        active_window.handle_key(key)
+      end
 
       NCurses.refresh
       App.windows.select { |w| w.visible }.each { |w| w.refresh }

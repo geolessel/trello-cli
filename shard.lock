@@ -1,6 +1,6 @@
 version: 1.0
 shards:
   ncurses:
-    path: ../crystal/ncurses.cr
-    version: 0.1.0
+    github: geolessel/ncurses.cr
+    commit: 2b1d18eb2f725ae13e53cae7eb1e601c8c1b1f34
 

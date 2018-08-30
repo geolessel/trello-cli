@@ -10,7 +10,8 @@ targets:
 
 dependencies:
   ncurses:
-    path: ../crystal/ncurses.cr
+    github: geolessel/ncurses.cr
+    branch: more-ncurses
 
 crystal: 0.26.0
 

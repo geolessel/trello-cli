@@ -3,3 +3,5 @@
 /bin/
 /.shards/
 *.dwarf
+.secrets.json
+log.txt

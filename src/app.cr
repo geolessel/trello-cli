@@ -2,7 +2,7 @@ require "ncurses"
 require "logger"
 
 class App
-  SECRETS = JSON.parse(File.read(".secrets.json"))
+  SECRETS = JSON.parse(File.read("#{ENV["HOME"]}/.trello-cli/secrets.json"))
   CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
   MEMBER_ID = SECRETS["memberId"]
 

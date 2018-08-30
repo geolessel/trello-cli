@@ -3,7 +3,7 @@ require "logger"
 
 class App
   SECRETS = JSON.parse(File.read("#{ENV["HOME"]}/.trello-cli/secrets.json"))
-  CREDENTIALS = "key=#{SECRETS["key"]}&token=#{SECRETS["token"]}"
+  CREDENTIALS = "key=3020057fffe933d81fe081eb4f8d126a&token=#{SECRETS["token"]}"
   MEMBER_ID = SECRETS["memberId"]
 
   LOG = Logger.new(File.open("log.txt", "w"), level: Logger::DEBUG)

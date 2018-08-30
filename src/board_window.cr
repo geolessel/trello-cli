@@ -37,4 +37,8 @@ class BoardsWindow < OptionSelectWindow
       end
     end
   end
+
+  def handle_select_previous
+    # noop -- there is no previous
+  end
 end

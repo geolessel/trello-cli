@@ -68,7 +68,7 @@ class OptionSelectWindow < Window
   def handle_key(key)
     case key
     when NCurses::KeyCode::DOWN, 'j'
-      if @selected < height-3
+      if @selected < height-3 && @options.size > @selected + 1
         @selected += 1
       elsif @row_offset + height <= @options.size + 1
         @row_offset += 1

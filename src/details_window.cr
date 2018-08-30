@@ -40,7 +40,6 @@ class DetailsWindow < Window
       pad.attroff(App::Colors.green.attr)
       @card.attachments.each do |attachment|
         pad.addstr("#{attachment["name"].to_s}\n")
-        # pad.addstr("  #{attachment["url"].to_s}\n")
       end
 
       pad.attron(App::Colors.green.attr)

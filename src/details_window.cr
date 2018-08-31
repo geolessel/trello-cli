@@ -26,25 +26,25 @@ class DetailsWindow < Window
   def refresh
     @win.erase
     @win.border
-    @win.attron(NCurses::Attribute::BOLD | App::Colors.blue.attr)
+    @win.attron(NCurses::Attribute::BOLD | App::Colors.blue)
     @win.mvaddstr(title, x: 1, y: 1)
-    @win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
+    @win.attroff(NCurses::Attribute::BOLD | App::Colors.blue)
     @win.mvaddstr("Users: #{@card.member_usernames}", x: 1, y: 2)
     @win.mvaddstr("Labels: #{@card.label_names}", x: 1, y: 3)
     @win.refresh
 
     NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
       pad.mvaddstr(@card.description, x: 0, y: 0)
-      pad.attron(App::Colors.green.attr)
+      pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Attachments   |--\n")
-      pad.attroff(App::Colors.green.attr)
+      pad.attroff(App::Colors.green)
       @card.attachments.each do |attachment|
         pad.addstr("#{attachment["name"].to_s}\n")
       end
 
-      pad.attron(App::Colors.green.attr)
+      pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Activity   |--\n")
-      pad.attroff(App::Colors.green.attr)
+      pad.attroff(App::Colors.green)
       @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
         pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
         pad.addstr(activity.title)
@@ -115,6 +115,10 @@ class DetailsWindow < Window
         win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "o", description: "Open this card in your web browser")
         win.add_help(key: "r", description: "Refresh the details")
+        win.add_help(key: "j", description: "Scroll down")
+        win.add_help(key: "k", description: "Scroll up")
+        win.add_help(key: "l", description: "Select the current item in the list")
+        win.add_help(key: "h", description: "Go back")
       end
     end
   end

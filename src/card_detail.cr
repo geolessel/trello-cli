@@ -16,7 +16,7 @@ class CardDetail
     "updateCheckItemStateOnCard",
   ]
 
-  def initialize(@id : String, @name : String, @window : Window)
+  def initialize(@id : String, @name : String)
   end
 
   def fetch

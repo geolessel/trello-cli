@@ -31,9 +31,9 @@ class HelpWindow < Window
 
     NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
       @helps.each do |help|
-        pad.attron(App::Colors.green.attr)
+        pad.attron(App::Colors.green)
         pad.addstr(help[:key])
-        pad.attroff(App::Colors.green.attr)
+        pad.attroff(App::Colors.green)
 
         pad.addstr(" -- ")
         pad.addstr(help[:description])

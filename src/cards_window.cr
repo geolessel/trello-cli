@@ -18,11 +18,22 @@ class CardsWindow < OptionSelectWindow
 
   def set_list_id(id : String)
     @path = "lists/#{id}/cards"
-    @params = "fields=name,shortUrl"
+    @params = "fields=name,shortUrl&members=true"
+  end
+
+  def render_row(option)
+    member_ids = option.json.as_h["members"].as_a.map { |m| m["id"].to_s }
+    if member_ids.includes?(App::MEMBER_ID)
+      win.attron(App::Colors.yellow)
+      super
+      win.attroff(App::Colors.yellow)
+    else
+      super
+    end
   end
 
   def handle_select_next(selected)
-    card = CardDetail.new(id: selected.key, name: selected.value, window: self)
+    card = CardDetail.new(id: selected.key, name: selected.value)
 
     details = DetailsWindow.new(card: card)
     details.link_parent(self)

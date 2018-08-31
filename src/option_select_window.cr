@@ -50,19 +50,20 @@ class OptionSelectWindow < Window
 
       if i == @selected
         if @active
-          # win.attron(NCurses::Attribute::STANDOUT)
-          win.attron( App::Colors.blue.attr | NCurses::Attribute::REVERSE)
+          win.attron( App::Colors.blue | NCurses::Attribute::REVERSE)
         else
-          win.attron( App::Colors.blue.attr)
+          win.attron( App::Colors.blue)
         end
       end
-      win.addnstr(option.value, @width-2)
-      win.attroff(NCurses::Attribute::STANDOUT)
-      win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr)
-      win.attroff(NCurses::Attribute::BOLD | App::Colors.blue.attr | NCurses::Attribute::REVERSE)
+      render_row(option)
+      win.attroff(App::Colors.blue | NCurses::Attribute::REVERSE)
     end
 
     win.refresh
+  end
+
+  def render_row(option)
+    win.addnstr(option.value, @width-2)
   end
 
   def handle_key(key)
@@ -88,7 +89,11 @@ class OptionSelectWindow < Window
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
-        win.add_help(key: "r", description: "Refresh the details")
+        win.add_help(key: "r", description: "Refresh the data in the active pane from Trello")
+        win.add_help(key: "j", description: "Scroll down")
+        win.add_help(key: "k", description: "Scroll up")
+        win.add_help(key: "l", description: "Select the current item in the list")
+        win.add_help(key: "h", description: "Go back")
       end
     else
       App::LOG.debug("Unhandled key: #{key}")
@@ -105,9 +110,13 @@ class OptionSelectWindow < Window
       @options = [] of OptionSelectOption
       json = API.get(@path, @params)
       json.as_a.each do |j|
-        @options << OptionSelectOption.new(key: j.as_h["id"].to_s, value: j.as_h["name"].to_s)
+        @options << OptionSelectOption.new(key: j.as_h["id"].to_s, value: render_option_value(j), json: j)
       end
     end
+  end
+
+  def render_option_value(json : JSON::Any)
+    json.as_h["name"].to_s
   end
 
   def handle_select_previous

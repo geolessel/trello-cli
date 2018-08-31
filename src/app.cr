@@ -38,15 +38,19 @@ class App
     extend self
 
     def cyan
-      NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK)
+      NCurses::ColorPair.new(1).init(NCurses::Color::CYAN, NCurses::Color::BLACK).attr
     end
 
     def blue
-      NCurses::ColorPair.new(2).init(NCurses::Color::BLUE, NCurses::Color::BLACK)
+      NCurses::ColorPair.new(2).init(NCurses::Color::BLUE, NCurses::Color::BLACK).attr
     end
 
     def green
-      NCurses::ColorPair.new(3).init(NCurses::Color::GREEN, NCurses::Color::BLACK)
+      NCurses::ColorPair.new(3).init(NCurses::Color::GREEN, NCurses::Color::BLACK).attr
+    end
+
+    def yellow
+      NCurses::ColorPair.new(4).init(NCurses::Color::YELLOW, NCurses::Color::BLACK).attr
     end
   end
 end

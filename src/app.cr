@@ -6,7 +6,7 @@ class App
   CREDENTIALS = "key=3020057fffe933d81fe081eb4f8d126a&token=#{SECRETS["token"]}"
   MEMBER_ID = SECRETS["memberId"]
 
-  LOG = Logger.new(File.open("log.txt", "w"), level: Logger::DEBUG)
+  LOG = Logger.new(File.open("#{ENV["HOME"]}/.trello-cli/log.txt", "w"), level: Logger::DEBUG)
 
   @@windows : Array(Window) = [] of Window
 

@@ -14,33 +14,17 @@ and the result is this project.
 
 ## Installation
 
-For now, you need to build it yourself and you must have the
-[Crystal language installed](https://crystal-lang.org/docs/installation/). You can
-
-1. Clone this repo
+1. Install it through homebrew! If you don't have homebrew, you'll have to compile it
+   yourself for now. See Development below for instructions. Otherwise, run
    ```sh
-   git clone https://github.com/geolessel/trello-cli.git
+   brew install geolessel/homebrew-repo/trello-cli
    ```
-2. Install the Crystal Shards (in the `trello-cli` directory)
-   ```
-   shards install
-   ```
-3. Build the app (in the `trello-cli` directory)
-   ```
-   crystal build --release src/trello.cr
-   ```
-
-   This will make a `trello` executable that you can then run. This will fail until you complete
-   the rest of the steps.
-   ```
-   ./trello
-   ```
-4. [Get an API token from Trello](https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=3020057fffe933d81fe081eb4f8d126a)
-5. Create a `.trello-cli` directory in your `$HOME` directory (like `/Users/geolessel`)
+2. [Get an API token from Trello](https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=3020057fffe933d81fe081eb4f8d126a)
+3. Create a `.trello-cli` directory in your `$HOME` directory (like `/Users/geolessel`)
    ```sh
    mkdir ~/.trello-cli
    ```
-6. Create a `~/.trello-cli/secrets.json` file in and add keys
+4. Create a `~/.trello-cli/secrets.json` file in and add keys
    and values for `key` (your Trello API key), `token` (your Trello API token),
    and `memberId` (your Trello member id).
    ```json
@@ -64,7 +48,21 @@ For now, you need to build it yourself and you must have the
 
 ## Development
 
-TODO: Write development instructions here
+For now, you need to build it yourself and you must have the
+[Crystal language installed](https://crystal-lang.org/docs/installation/). You can
+
+1. Clone this repo
+   ```sh
+   git clone https://github.com/geolessel/trello-cli.git
+   ```
+2. Install the Crystal Shards (in the `trello-cli` directory)
+   ```
+   shards install
+   ```
+3. Run the app (in the `trello-cli` directory)
+   ```
+   crystal run src/trello.cr
+   ```
 
 ## Contributing
 

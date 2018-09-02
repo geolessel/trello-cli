@@ -1,5 +1,5 @@
 module Wrap
-  def wrap(text, width)
+  def wrap(text : String, width : Int32)
     chars = text.chars
     lines = [] of String
     until chars.empty?
@@ -11,7 +11,7 @@ module Wrap
       elsif line.size > width
         chars.unshift(line.pop)
       end
-      lines << line.join.rstrip
+      lines << line.join.strip
     end
     lines.join("\n")
   end

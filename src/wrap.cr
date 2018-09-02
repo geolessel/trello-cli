@@ -4,7 +4,7 @@ module Wrap
     lines = [] of String
     until chars.empty?
       line = chars.shift(width + 1)
-      if line.any? { |c| c.whitespace? }
+      if line.any?(&.whitespace?)
         until chars.empty? || line.size == 1 || line.last.whitespace?
           chars.unshift(line.pop)
         end

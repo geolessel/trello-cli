@@ -49,10 +49,16 @@ class DetailsWindow < Window
       pad.attroff(App::Colors.green)
       @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
         pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
-        pad.addstr(activity.title)
+        wrap(activity.title, @width - 2).each_line do |line|
+          pad.addstr(line)
+          pad.addstr("\n") unless line.ends_with?("\n")
+        end
         pad.attroff(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
-        pad.addstr("\n")
-        pad.addstr(activity.description)
+        wrap(activity.description, @width - 2).each_line.with_index do |line, i|
+          pad.addstr(line)
+          pad.addstr("\n") unless line.ends_with?("\n")
+        end
+        pad.addstr(activity.timestamp)
         pad.addstr("\n\n\n")
       end
       pad.refresh(@row, 0, 6, 28, NCurses.maxy - 3, NCurses.maxx - 2)

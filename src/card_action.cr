@@ -33,21 +33,15 @@ class CardAction
   def description
     case type
     when "commentCard"
-      <<-DESC
-      #{@action["data"]["text"]}
-      [ #{date} ]
-      DESC
+      @action["data"]["text"].to_s
     when "addAttachmentToCard"
       if @action["data"]["attachment"].as_h.fetch("url", false)
-        <<-DESC
-        #{@action["data"]["attachment"]["url"].to_s}
-        [ #{date} ]
-        DESC
+        @action["data"]["attachment"]["url"].to_s
       else
-        "[ #{date} ]"
+        ""
       end
     else
-      "[ #{date} ]"
+      ""
     end
   end
 
@@ -61,6 +55,10 @@ class CardAction
 
   def date
     @action["date"]
+  end
+
+  def timestamp
+    "[ #{date} ]"
   end
 
   def attachment_name

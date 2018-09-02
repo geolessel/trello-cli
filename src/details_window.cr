@@ -34,7 +34,9 @@ class DetailsWindow < Window
     @win.refresh
 
     NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
-      pad.mvaddstr(@card.description, x: 0, y: 0)
+      wrap(@card.description, @width - 2).each_line.with_index do |line, i|
+        pad.mvaddstr(line, x: 0, y: i)
+      end
       pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Attachments   |--\n")
       pad.attroff(App::Colors.green)

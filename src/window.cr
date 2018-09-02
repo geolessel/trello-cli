@@ -1,7 +1,10 @@
 require "ncurses"
 require "./app"
+require "./wrap"
 
 abstract class Window
+  include Wrap
+
   property active : Bool = false
   property title : String = ""
   property visible : Bool = true

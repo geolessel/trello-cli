@@ -35,7 +35,7 @@ class DetailsWindow < Window
 
     NCurses::Pad.open(height: 1000, width: @width - 2) do |pad|
       wrap(@card.description, @width - 2).each_line.with_index do |line, i|
-        pad.mvaddstr(line, x: 0, y: i)
+        pad.mvaddstr(line.rstrip, x: 0, y: i)
       end
       pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Attachments   |--\n")
@@ -50,13 +50,13 @@ class DetailsWindow < Window
       @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
         pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
         wrap(activity.title, @width - 2).each_line do |line|
-          pad.addstr(line)
-          pad.addstr("\n") unless line.ends_with?("\n")
+          pad.addstr(line.rstrip)
+          pad.addstr("\n") unless line.size == @width - 2
         end
         pad.attroff(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
         wrap(activity.description, @width - 2).each_line.with_index do |line, i|
-          pad.addstr(line)
-          pad.addstr("\n") unless line.ends_with?("\n")
+          pad.addstr(line.rstrip)
+          pad.addstr("\n") unless line.size == @width - 2
         end
         pad.addstr(activity.timestamp)
         pad.addstr("\n\n\n")

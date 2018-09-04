@@ -15,12 +15,12 @@ describe Wrap do
     result.should eq("Loremipsumdolor\nsit amet")
   end
 
-  it "will wrap a word that is too long without adding a blank line" do
+  it "wraps a word that is too long without adding a blank line" do
     result = wrap("Loremipsumdolor sit amet", 13)
     result.should eq("Loremipsumdol\nor sit amet")
   end
 
-  it "will preserve newlines" do
+  it "preserves existing newlines" do
     result = wrap("Lorem ipsum dolor\n\nsit amet", 13)
     result.should eq("Lorem ipsum\ndolor\n\nsit amet")
   end

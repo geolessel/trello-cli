@@ -1,9 +1,65 @@
+require "./wrap"
+
 class CardAction
+  include Wrap
+
   def initialize(@action : JSON::Any)
   end
 
   def type
     @action["type"].to_s
+  end
+
+  def display!(pad : NCurses::Pad | NCurses::Window, width : Int32)
+    case type
+    when "commentCard"
+      display_title(pad, width)
+      display_description(pad, width)
+      display_timestamp(pad, width)
+    else
+      display_title(pad, width)
+      pad.addstr(" -- ") unless description.blank?
+      display_description(pad, width)
+    end
+  end
+
+
+  def display_title(pad : NCurses::Pad | NCurses::Window, width : Int32)
+    case type
+    when "commentCard"
+      pad.attron(NCurses::Attribute::UNDERLINE | App::Colors.yellow)
+      wrap(title, width).each_line do |line|
+        pad.addstr(line)
+        pad.addstr("\n") unless line.ends_with?("\n")
+      end
+      pad.attroff(NCurses::Attribute::UNDERLINE | App::Colors.yellow)
+    else
+      wrap(title, width).each_line do |line|
+        pad.addstr(line)
+        pad.addstr("\n") unless line.ends_with?("\n")
+      end
+    end
+  end
+
+  def display_description(pad : NCurses::Pad | NCurses::Window, width : Int32)
+    wrap(description, width).each_line.with_index do |line, i|
+      pad.addstr(line)
+      pad.addstr("\n") unless line.ends_with?("\n")
+    end
+  end
+
+  def display_timestamp(pad : NCurses::Pad | NCurses::Window, width : Int32)
+    case type
+    when "commentCard"
+      pad.attron(App::Colors.yellow)
+      pad.addstr("--- ")
+      pad.attroff(App::Colors.yellow)
+    end
+
+    wrap(timestamp, width).each_line.with_index do |line, i|
+      pad.addstr(line)
+      pad.addstr("\n") unless line.ends_with?("\n")
+    end
   end
 
   def title

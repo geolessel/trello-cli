@@ -3,7 +3,7 @@ module Wrap
     chars = text.chars
     lines = [] of String
     until chars.empty?
-      line = chars.shift(width + 1)
+      line = chars.shift(width)
       # preserve existing newlines
       if (newline_index = line.index { |c| c == '\n' })
         chars = line.last(line.size - newline_index - 1) + chars

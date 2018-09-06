@@ -31,7 +31,17 @@ and the result is this project.
    account. Once you accept, Trello will provide you with an API token. Just
    paste that into the line asking for your token and it will do the rest.
 
-   <img src="support/setup.png" alt="the app will run through the setup process" />
+   ```
+   --| This app requires access to your trello account. |--
+
+   I'll open up a web page requesting access. Once you accept, you will
+   be presented with an API token. Copy that and use it in the next step.
+   Press ENTER to continue
+
+   Token: <PASTE YOUR TOKEN HERE>
+   Completing setup
+   Done.
+   ```
 
 ## Usage
 

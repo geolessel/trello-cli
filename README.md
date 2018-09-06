@@ -24,25 +24,14 @@ and the result is this project.
    ```sh
    brew install --HEAD geolessel/homebrew-repo/trello-cli
    ```
-2. [Get an API token from Trello](https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=3020057fffe933d81fe081eb4f8d126a)
-3. Create a `.trello-cli` directory in your `$HOME` directory (like `/Users/geolessel`)
-   ```sh
-   mkdir ~/.trello-cli
-   ```
-4. Create a `~/.trello-cli/secrets.json` file in and add keys
-   and values for `key` (your Trello API key), `token` (your Trello API token),
-   and `memberId` (your Trello member id).
-   ```json
-   {
-     "token": "YOUR TRELLO TOKEN",
-     "memberId": "YOUR MEMBER ID"
-   }
-   ```
+2. Run `trello`
 
-   You can get your member id by visiting this URL:
-   https://api.trello.com/1/members/me?key=3020057fffe933d81fe081eb4f8d126a&token={YOUR_TOKEN}
+   The application should take you through a setup process that will direct
+   you to Trello's site asking if you'll grant the app access to your Trello
+   account. Once you accept, Trello will provide you with an API token. Just
+   paste that into the line asking for your token and it will do the rest.
 
-   This will return JSON and inside of that, you can find your `"id"`.
+   <img src="support/setup.png" alt="the app will run through the setup process" />
 
 ## Usage
 

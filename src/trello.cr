@@ -46,9 +46,11 @@ module Trello
   end
 end
 
-if !File.exists?("#{App::CONFIG_DIR}/secrets.json")
-  App.run_setup
-end
+unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
+  if !File.exists?("#{App::CONFIG_DIR}/secrets.json")
+    App.run_setup
+  end
 
-App.init
-Trello.start unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
+  App.init
+  Trello.start
+end

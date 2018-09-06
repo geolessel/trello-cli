@@ -2,6 +2,7 @@ require "ncurses"
 require "./window"
 require "./help_window"
 require "./app"
+require "./card_action_builder"
 
 class DetailsWindow < Window
   property row : Int32 = 0
@@ -47,7 +48,7 @@ class DetailsWindow < Window
       pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Activity   |--\n")
       pad.attroff(App::Colors.green)
-      @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
+      @card.activities.map { |activity| CardActionBuilder.run(activity) }.each do |activity|
         activity.display!(pad, width: @width - 2)
         pad.addstr("\n\n\n")
       end

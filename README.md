@@ -70,7 +70,7 @@ For now, you need to build it yourself and you must have the
 
 ## Contributing
 
-1. Fork it (<https://github.com/geolessel/trello/fork>)
+1. Fork it (<https://github.com/geolessel/trello-cli/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

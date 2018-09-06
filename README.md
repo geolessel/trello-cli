@@ -19,6 +19,11 @@ and the result is this project.
    ```sh
    brew install geolessel/homebrew-repo/trello-cli
    ```
+
+   You can also track the master branch by adding the `--HEAD` flag.
+   ```sh
+   brew install --HEAD geolessel/homebrew-repo/trello-cli
+   ```
 2. [Get an API token from Trello](https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=3020057fffe933d81fe081eb4f8d126a)
 3. Create a `.trello-cli` directory in your `$HOME` directory (like `/Users/geolessel`)
    ```sh
@@ -75,3 +80,4 @@ For now, you need to build it yourself and you must have the
 ## Contributors
 
 - [geolessel](https://github.com/geolessel) Geoffrey Lessel - creator, maintainer
+- [seven1m](https://github.com/seven1m) Tim Morgan - contributor

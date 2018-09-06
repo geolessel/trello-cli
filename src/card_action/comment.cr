@@ -17,7 +17,7 @@ class Comment < CardAction
     pad.attron(NCurses::Attribute::UNDERLINE | App::Colors.yellow)
     wrap(title, width).each_line do |line|
       pad.addstr(line)
-      pad.addstr("\n") unless line.ends_with?("\n")
+      pad.addstr("\n") unless line.size == width
     end
     pad.attroff(NCurses::Attribute::UNDERLINE | App::Colors.yellow)
   end
@@ -25,7 +25,7 @@ class Comment < CardAction
   def display_description(pad : NCurses::Pad | NCurses::Window, width : Int32)
     wrap(description, width).each_line.with_index do |line, i|
       pad.addstr(line)
-      pad.addstr("\n") unless line.ends_with?("\n")
+      pad.addstr("\n") unless line.size == width
     end
   end
 
@@ -36,7 +36,7 @@ class Comment < CardAction
 
     wrap(timestamp, width).each_line.with_index do |line, i|
       pad.addstr(line)
-      pad.addstr("\n") unless line.ends_with?("\n")
+      pad.addstr("\n") unless line.size == width
     end
   end
 

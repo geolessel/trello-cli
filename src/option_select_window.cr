@@ -96,7 +96,7 @@ class OptionSelectWindow < Window
         win.add_help(key: "h", description: "Go back")
       end
     else
-      App::LOG.debug("Unhandled key: #{key}")
+      App.log.debug("Unhandled key: #{key}")
     end
   end
 

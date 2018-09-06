@@ -4,7 +4,7 @@ require "ncurses"
 require "./*"
 
 module Trello
-  VERSION = "0.1.0"
+  VERSION = "0.2.0"
 
   def self.start
     LibNCurses.setlocale(0, "") # enable unicode
@@ -46,4 +46,11 @@ module Trello
   end
 end
 
-Trello.start unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
+unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
+  if !File.exists?("#{App::CONFIG_DIR}/secrets.json")
+    App.run_setup
+  end
+
+  App.init
+  Trello.start
+end

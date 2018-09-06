@@ -53,11 +53,11 @@ class CardDetail
   end
 
   def add_self_as_member
-    response = API.post("/cards/#{@id}/idMembers", "value=#{App::MEMBER_ID}")
+    response = API.post("/cards/#{@id}/idMembers", "value=#{App.member_id}")
     if response.success?
       fetch
     else
-      App::LOG.debug("failed to add self as member: #{response.inspect}")
+      App.log.debug("failed to add self as member: #{response.inspect}")
     end
   end
 
@@ -66,7 +66,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App::LOG.debug("failed to add label to card: #{response.inspect}")
+      App.log.debug("failed to add label to card: #{response.inspect}")
     end
   end
 
@@ -75,7 +75,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App::LOG.debug("failed to move card to list: #{response.inspect}")
+      App.log.debug("failed to move card to list: #{response.inspect}")
     end
   end
 end

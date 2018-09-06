@@ -23,7 +23,7 @@ class CardsWindow < OptionSelectWindow
 
   def render_row(option)
     member_ids = option.json.as_h["members"].as_a.map { |m| m["id"].to_s }
-    if member_ids.includes?(App::MEMBER_ID)
+    if member_ids.includes?(App.member_id)
       win.attron(App::Colors.yellow)
       super
       win.attroff(App::Colors.yellow)

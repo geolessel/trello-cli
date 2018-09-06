@@ -2,13 +2,21 @@ require "ncurses"
 require "logger"
 
 class App
-  SECRETS = JSON.parse(File.read("#{ENV["HOME"]}/.trello-cli/secrets.json"))
-  CREDENTIALS = "key=3020057fffe933d81fe081eb4f8d126a&token=#{SECRETS["token"]}"
-  MEMBER_ID = SECRETS["memberId"]
-
-  LOG = Logger.new(File.open("#{ENV["HOME"]}/.trello-cli/log.txt", "w"), level: Logger::DEBUG)
+  CONFIG_DIR = "#{ENV["HOME"]}/.trello-cli"
+  APP_KEY = "3020057fffe933d81fe081eb4f8d126a"
 
   @@windows : Array(Window) = [] of Window
+  @@member_id : String = ""
+  @@secrets : JSON::Any = JSON::Any.new("{}")
+  @@token : String | Nil = ""
+  @@log : Logger = Logger.new(nil)
+
+  def self.init
+    @@secrets = JSON.parse(File.read("#{CONFIG_DIR}/secrets.json"))
+    @@token = App.secrets["token"].to_s
+    @@member_id = @@secrets["memberId"].to_s
+    @@log = Logger.new(File.open("#{CONFIG_DIR}/log.txt", "w"), level: Logger::DEBUG)
+  end
 
   def self.activate_window(window : Window)
     @@active_window = window
@@ -34,6 +42,32 @@ class App
     @@windows
   end
 
+  def self.credentials
+    "key=#{APP_KEY}&token=#{@@token}"
+  end
+
+  def self.member_id
+    @@member_id
+  end
+
+  def self.secrets
+    @@secrets
+  end
+
+  def self.log
+    @@log
+  end
+
+  def self.run_setup
+    Setup.make_config_dir
+    Setup.display_intro_text
+    @@token = Setup.get_token
+    @@member_id = Setup.fetch_member_id
+    Setup.write_config(@@token, @@member_id)
+    puts "Done."
+    sleep 1
+  end
+
   module Colors
     extend self
 
@@ -51,6 +85,40 @@ class App
 
     def yellow
       NCurses::ColorPair.new(4).init(NCurses::Color::YELLOW, NCurses::Color::BLACK).attr
+    end
+  end
+
+  module Setup
+    extend self
+
+    def make_config_dir
+      Dir.mkdir_p(CONFIG_DIR)
+    end
+
+    def display_intro_text
+      puts
+      puts "--| This app requires access to your trello account. |--"
+      puts
+      puts "I'll open up a web page requesting access. Once you accept, you will"
+      puts "be presented with an API token. Copy that and use it in the next step."
+      puts "Press ENTER to continue"
+      gets
+    end
+
+    def get_token
+      `open 'https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=#{APP_KEY}'`
+      print "Token: "
+      gets
+    end
+
+    def fetch_member_id
+      puts "Completing setup"
+      json = API.get("members/me", "")
+      json["id"].to_s
+    end
+
+    def write_config(token, member_id)
+      File.write("#{App::CONFIG_DIR}/secrets.json", "{\"token\": \"#{token}\", \"memberId\": \"#{member_id}\"}")
     end
   end
 end

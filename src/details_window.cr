@@ -2,6 +2,7 @@ require "ncurses"
 require "./window"
 require "./help_window"
 require "./app"
+require "./card_action_builder"
 
 class DetailsWindow < Window
   property row : Int32 = 0
@@ -47,18 +48,8 @@ class DetailsWindow < Window
       pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Activity   |--\n")
       pad.attroff(App::Colors.green)
-      @card.activities.map { |activity| CardAction.new(activity) }.each do |activity|
-        pad.attron(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
-        wrap(activity.title, @width - 2).each_line do |line|
-          pad.addstr(line.rstrip)
-          pad.addstr("\n") unless line.size == @width - 2
-        end
-        pad.attroff(NCurses::Attribute::BOLD | NCurses::Attribute::UNDERLINE)
-        wrap(activity.description, @width - 2).each_line.with_index do |line, i|
-          pad.addstr(line.rstrip)
-          pad.addstr("\n") unless line.size == @width - 2
-        end
-        pad.addstr(activity.timestamp)
+      @card.activities.map { |activity| CardActionBuilder.run(activity) }.each do |activity|
+        activity.display!(pad, width: @width - 2)
         pad.addstr("\n\n\n")
       end
       pad.refresh(@row, 0, 6, 28, NCurses.maxy - 3, NCurses.maxx - 2)

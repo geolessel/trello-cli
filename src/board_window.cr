@@ -5,7 +5,7 @@ class BoardsWindow < OptionSelectWindow
   def initialize
     super(x: 1, y: 1, height: 15, width: 25) do |win|
       win.path = "members/me/boards"
-      win.params = "fields=name,starred,shortUrl"
+      win.params = "fields=name,starred,shortUrl&filter=open"
       win.active = true
       win.title = "Boards"
     end

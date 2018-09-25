@@ -108,8 +108,8 @@ class DetailsWindow < Window
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
-        win.add_help(key: "a", description: "Add yourself as a member of this card")
-        win.add_help(key: "shift-a", description: "Open an attachment in your browser")
+        win.add_help(key: "a", description: "Open an attachment in your browser")
+        win.add_help(key: "SPACE", description: "Add yourself as a member of this card")
         win.add_help(key: "shift-l", description: "Add a label to this card")
         win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "o", description: "Open this card in your web browser")

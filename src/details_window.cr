@@ -70,14 +70,14 @@ class DetailsWindow < Window
       end
     when NCurses::KeyCode::DOWN, 'j'
       @row += 1
-    when ' ', 'd'
+    when 'd'
       @row += 10
     when 'u'
       @row -= 10
       if @row < 0
         @row = 0
       end
-    when 'a'
+    when ' '
       @card.add_self_as_member
     when 76, 'L'
       LabelSelectWindow.new(board_id: @card.board_id) do |win|
@@ -97,7 +97,7 @@ class DetailsWindow < Window
           return
         end
       end
-    when 'A'
+    when 'a'
       AttachmentSelectWindow.new(card_id: @card.id) do |win|
         win.link_parent(self)
         win.on_select = ->(attachment_url : String) do

@@ -92,4 +92,13 @@ class CardDetail
       fetch
     end
   end
+
+  def archive
+    response = API.put("cards/#{@id}", "closed=true")
+    if response.success?
+      fetch
+    else
+      App.log.debug("failed to archive card: #{response.inspect}")
+    end
+  end
 end

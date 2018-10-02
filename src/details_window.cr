@@ -110,6 +110,8 @@ class DetailsWindow < Window
           return
         end
       end
+    when 'x'
+      @card.archive
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
@@ -118,6 +120,7 @@ class DetailsWindow < Window
         win.add_help(key: "SPACE", description: "Add yourself as a member of this card")
         win.add_help(key: "shift-l", description: "Add a label to this card")
         win.add_help(key: "m", description: "Move this card to another list")
+        win.add_help(key: "x", description: "Archive card")
         win.add_help(key: "o", description: "Open this card in your web browser")
         win.add_help(key: "r", description: "Refresh the details")
         win.add_help(key: "j", description: "Scroll down")

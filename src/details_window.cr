@@ -81,7 +81,7 @@ class DetailsWindow < Window
         @row = 0
       end
     when ' '
-      @card.add_self_as_member
+      @card.add_or_remove_self_as_member
     when 76, 'L'
       LabelSelectWindow.new(board_id: @card.board_id) do |win|
         win.link_parent(self)
@@ -117,7 +117,7 @@ class DetailsWindow < Window
         win.link_parent(self)
         win.add_help(key: "a", description: "Open an attachment in your browser")
         win.add_help(key: "c", description: "Add a comment to the file via your $EDITOR (CLI only)")
-        win.add_help(key: "SPACE", description: "Add yourself as a member of this card")
+        win.add_help(key: "SPACE", description: "Add or remove yourself as a member of this card")
         win.add_help(key: "shift-l", description: "Add or remove a label to/from this card")
         win.add_help(key: "m", description: "Move this card to another list")
         win.add_help(key: "x", description: "Archive card")

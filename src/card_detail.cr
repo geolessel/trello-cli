@@ -52,12 +52,17 @@ class CardDetail
     @json.as_h["shortUrl"].to_s
   end
 
-  def add_self_as_member
-    response = API.post("/cards/#{@id}/idMembers", "value=#{App.member_id}")
+  def add_or_remove_self_as_member
+    response =
+      if @json.as_h["members"].as_a.find { |l| l["id"] == App.member_id }
+        API.delete("/cards/#{@id}/idMembers/#{App.member_id}")
+      else
+        API.post("/cards/#{@id}/idMembers", "value=#{App.member_id}")
+      end
     if response.success?
       fetch
     else
-      App.log.debug("failed to add self as member: #{response.inspect}")
+      App.log.debug("failed to manage user as member: #{response.inspect}")
     end
   end
 

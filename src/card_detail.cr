@@ -61,12 +61,18 @@ class CardDetail
     end
   end
 
-  def add_label(label_id : String)
-    response = API.post("/cards/#{@id}/idLabels", "value=#{label_id}")
+  def manage_label(label_id : String)
+    response =
+      if @json.as_h["labels"].as_a.find { |l| l["id"] == label_id }
+        API.delete("/cards/#{@id}/idLabels/#{label_id}")
+      else
+        API.post("/cards/#{@id}/idLabels", "value=#{label_id}")
+      end
+
     if response.success?
       fetch
     else
-      App.log.debug("failed to add label to card: #{response.inspect}")
+      App.log.debug("failed to manage label on card: #{response.inspect}")
     end
   end
 

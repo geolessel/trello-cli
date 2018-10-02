@@ -24,4 +24,10 @@ class API
     App.log.debug("PUTting URL: #{url}")
     response = HTTP::Client.put(url)
   end
+
+  def self.delete(path : String, params : String = "")
+    url = "#{API_ROOT}/#{path}?#{App.credentials}&#{params}"
+    App.log.debug("DELETEing URL: #{url}")
+    response = HTTP::Client.delete(url)
+  end
 end

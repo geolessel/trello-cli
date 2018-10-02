@@ -2,5 +2,5 @@ version: 1.0
 shards:
   ncurses:
     github: geolessel/ncurses.cr
-    commit: 2b1d18eb2f725ae13e53cae7eb1e601c8c1b1f34
+    commit: b7bbc1762fcf67b08da02113709c4002ca86f17f
 

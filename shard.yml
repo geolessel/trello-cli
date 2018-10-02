@@ -11,7 +11,7 @@ targets:
 dependencies:
   ncurses:
     github: geolessel/ncurses.cr
-    branch: more-ncurses
+    branch: clear-erase
 
 crystal: 0.26.0
 

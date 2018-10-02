@@ -3,6 +3,7 @@ require "./window"
 require "./help_window"
 require "./app"
 require "./card_action_builder"
+require "./api"
 
 class DetailsWindow < Window
   property row : Int32 = 0
@@ -70,6 +71,8 @@ class DetailsWindow < Window
       end
     when NCurses::KeyCode::DOWN, 'j'
       @row += 1
+    when 'c'
+      @card.add_comment
     when 'd'
       @row += 10
     when 'u'
@@ -89,6 +92,8 @@ class DetailsWindow < Window
       end
     when 'o'
       `open #{@card.short_url}`
+    when 'r'
+      reload_card!
     when 'm'
       ListSelectWindow.new(board_id: @card.board_id) do |win|
         win.link_parent(self)
@@ -109,6 +114,7 @@ class DetailsWindow < Window
       HelpWindow.new do |win|
         win.link_parent(self)
         win.add_help(key: "a", description: "Open an attachment in your browser")
+        win.add_help(key: "c", description: "Add a comment to the file via your $EDITOR (CLI only)")
         win.add_help(key: "SPACE", description: "Add yourself as a member of this card")
         win.add_help(key: "shift-l", description: "Add a label to this card")
         win.add_help(key: "m", description: "Move this card to another list")
@@ -124,6 +130,10 @@ class DetailsWindow < Window
 
   def activate!
     super
+    reload_card!
+  end
+
+  def reload_card!
     @card.fetch
   end
 end

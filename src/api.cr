@@ -13,10 +13,10 @@ class API
     json
   end
 
-  def self.post(path : String, params : String)
+  def self.post(path : String, params : String = "", form : String | IO | Hash = "")
     url = "#{API_ROOT}/#{path}?#{App.credentials}&#{params}"
     App.log.debug("POSTing URL: #{url}")
-    response = HTTP::Client.post(url)
+    response = HTTP::Client.post(url, form: form)
   end
 
   def self.put(path : String, params : String)

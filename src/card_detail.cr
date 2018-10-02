@@ -78,4 +78,18 @@ class CardDetail
       App.log.debug("failed to move card to list: #{response.inspect}")
     end
   end
+
+  def add_comment
+    File.delete(App.comment_temp_file_path) if File.exists?(App.comment_temp_file_path)
+
+    Process.run(ENV["EDITOR"], args: {App.comment_temp_file_path}, output: STDOUT, input: STDIN, error: STDERR, shell: true)
+
+    App.reset_screen
+
+    unless !File.exists?(App.comment_temp_file_path) || File.empty?(App.comment_temp_file_path)
+      comment_text = File.read(App.comment_temp_file_path)
+      API.post("/cards/#{@id}/actions/comments", form: { "text" => comment_text })
+      fetch
+    end
+  end
 end

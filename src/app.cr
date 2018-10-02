@@ -18,6 +18,17 @@ class App
     @@log = Logger.new(File.open("#{CONFIG_DIR}/log.txt", "w"), level: Logger::DEBUG)
   end
 
+  def self.setup_ncurses
+    NCurses.clear
+    NCurses.erase
+    NCurses.start_color
+    # NCurses.use_default_colors
+    NCurses.cbreak # CTRL-C breaks the program
+    NCurses.noecho # Don't print characters as the user types
+    NCurses.curs_set(0) # hide the cursor
+    NCurses.keypad(true) # allows arrow and F# keys
+  end
+
   def self.activate_window(window : Window)
     @@active_window = window
   end
@@ -66,6 +77,19 @@ class App
     Setup.write_config(@@token, @@member_id)
     puts "Done."
     sleep 1
+  end
+
+  def self.comment_temp_file_path
+    "#{CONFIG_DIR}/comment.tmp"
+  end
+
+  def self.reset_screen
+    NCurses.clear
+    NCurses.erase
+    NCurses.curs_set(1)
+    NCurses.curs_set(0)
+    @@windows.each { |w| w.resize }
+    NCurses.refresh
   end
 
   module Colors

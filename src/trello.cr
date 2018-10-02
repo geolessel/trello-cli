@@ -9,12 +9,7 @@ module Trello
   def self.start
     LibNCurses.setlocale(0, "") # enable unicode
     NCurses.open do
-      NCurses.start_color
-      # NCurses.use_default_colors
-      NCurses.cbreak # CTRL-C breaks the program
-      NCurses.noecho # Don't print characters as the user types
-      NCurses.curs_set(0) # hide the cursor
-      NCurses.keypad(true) # allows arrow and F# keys
+      App.setup_ncurses
 
       boards = BoardsWindow.new
       boards.activate!

@@ -89,15 +89,19 @@ class OptionSelectWindow < Window
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
-        win.add_help(key: "r", description: "Refresh the data in the active pane from Trello")
-        win.add_help(key: "j", description: "Scroll down")
-        win.add_help(key: "k", description: "Scroll up")
-        win.add_help(key: "l", description: "Select the current item in the list")
-        win.add_help(key: "h", description: "Go back")
+        add_helps(win)
       end
     else
       App.log.debug("Unhandled key: #{key}")
     end
+  end
+
+  def add_helps(win)
+    win.add_help(key: "r", description: "Refresh the data in the active pane from Trello")
+    win.add_help(key: "j", description: "Scroll down")
+    win.add_help(key: "k", description: "Scroll up")
+    win.add_help(key: "l", description: "Select the current item in the list")
+    win.add_help(key: "h", description: "Go back")
   end
 
   def activate!

@@ -17,6 +17,7 @@ class CardsWindow < OptionSelectWindow
   end
 
   def set_list_id(id : String)
+    @list_id = id
     @path = "lists/#{id}/cards"
     @params = "fields=name,shortUrl&members=true"
   end
@@ -42,5 +43,30 @@ class CardsWindow < OptionSelectWindow
     @visible = false
     @win.erase
     @win.refresh
+  end
+
+  def add_helps(win)
+    win.add_help(key: "c", description: "Create a new card on this list")
+    super
+  end
+
+  def handle_key(key)
+    case key
+    when 'c'
+      contents = JSON.build do |json|
+        json.object do
+          json.field "name", ""
+          json.field "description", ""
+        end
+      end
+
+      Editor.run(contents: contents) do |card_json|
+        card = JSON.parse(card_json)
+        API.post("/cards", params: "idList=#{@list_id}", form: "name=#{card["name"]}&desc=#{card["description"]}")
+        fetch
+      end
+    else
+      super
+    end
   end
 end

@@ -79,14 +79,6 @@ class App
     sleep 1
   end
 
-  def self.temp_file_path
-    "#{CONFIG_DIR}/trello.tmp"
-  end
-
-  def self.clear_temp_file
-    File.delete(App.temp_file_path) if File.exists?(App.temp_file_path)
-  end
-
   def self.reset_screen
     NCurses.clear
     NCurses.erase

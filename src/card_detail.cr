@@ -1,5 +1,6 @@
 require "./app"
 require "./api"
+require "./editor"
 
 class CardDetail
   getter id, name
@@ -91,15 +92,8 @@ class CardDetail
   end
 
   def add_comment
-    App.clear_temp_file
-
-    Process.run(ENV["EDITOR"], args: {App.temp_file_path}, output: STDOUT, input: STDIN, error: STDERR, shell: true)
-
-    App.reset_screen
-
-    unless !File.exists?(App.temp_file_path) || File.empty?(App.temp_file_path)
-      comment_text = File.read(App.temp_file_path)
-      API.post("/cards/#{@id}/actions/comments", form: { "text" => comment_text })
+    Editor.run do |comment|
+      API.post("/cards/#{@id}/actions/comments", form: { "text" => comment })
       fetch
     end
   end
@@ -114,20 +108,10 @@ class CardDetail
   end
 
   def add_attachment
-    App.clear_temp_file
-
-    File.write(App.temp_file_path, "{\n  \"name\": \"\",\n  \"url\": \"\"\n}")
-
-    Process.run(ENV["EDITOR"], args: {App.temp_file_path}, output: STDOUT, input: STDIN, error: STDERR, shell: true)
-
-    App.reset_screen
-
-    unless !File.exists?(App.temp_file_path) || File.empty?(App.temp_file_path)
-      att = JSON.parse(File.read(App.temp_file_path))
-      App.log.debug("attachment json: #{att}")
+    Editor.run(contents: "{\n  \"name\": \"\",\n  \"url\": \"\"\n}") do |json|
+      att = JSON.parse(json)
       API.post("/cards/#{@id}/attachments", form: "name=#{att["name"]}&url=#{att["url"]}")
       fetch
     end
   end
-
 end

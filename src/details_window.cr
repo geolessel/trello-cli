@@ -110,12 +110,15 @@ class DetailsWindow < Window
           return
         end
       end
+    when 'A'
+      @card.add_attachment
     when 'x'
       @card.archive
     when '?'
       HelpWindow.new do |win|
         win.link_parent(self)
         win.add_help(key: "a", description: "Open an attachment in your browser")
+        win.add_help(key: "A", description: "Add an attachment URL to this card")
         win.add_help(key: "c", description: "Add a comment to the file via your $EDITOR (CLI only)")
         win.add_help(key: "SPACE", description: "Add or remove yourself as a member of this card")
         win.add_help(key: "shift-l", description: "Add or remove a label to/from this card")

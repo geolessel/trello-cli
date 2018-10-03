@@ -1,5 +1,6 @@
 require "./app"
 require "./api"
+require "./editor"
 
 class CardDetail
   getter id, name
@@ -52,21 +53,32 @@ class CardDetail
     @json.as_h["shortUrl"].to_s
   end
 
-  def add_self_as_member
-    response = API.post("/cards/#{@id}/idMembers", "value=#{App.member_id}")
+  def add_or_remove_self_as_member
+    response =
+      if @json.as_h["members"].as_a.find { |l| l["id"] == App.member_id }
+        API.delete("/cards/#{@id}/idMembers/#{App.member_id}")
+      else
+        API.post("/cards/#{@id}/idMembers", "value=#{App.member_id}")
+      end
     if response.success?
       fetch
     else
-      App.log.debug("failed to add self as member: #{response.inspect}")
+      App.log.debug("failed to manage user as member: #{response.inspect}")
     end
   end
 
-  def add_label(label_id : String)
-    response = API.post("/cards/#{@id}/idLabels", "value=#{label_id}")
+  def manage_label(label_id : String)
+    response =
+      if @json.as_h["labels"].as_a.find { |l| l["id"] == label_id }
+        API.delete("/cards/#{@id}/idLabels/#{label_id}")
+      else
+        API.post("/cards/#{@id}/idLabels", "value=#{label_id}")
+      end
+
     if response.success?
       fetch
     else
-      App.log.debug("failed to add label to card: #{response.inspect}")
+      App.log.debug("failed to manage label on card: #{response.inspect}")
     end
   end
 
@@ -80,15 +92,25 @@ class CardDetail
   end
 
   def add_comment
-    File.delete(App.comment_temp_file_path) if File.exists?(App.comment_temp_file_path)
+    Editor.run do |comment|
+      API.post("/cards/#{@id}/actions/comments", form: { "text" => comment })
+      fetch
+    end
+  end
 
-    Process.run(ENV["EDITOR"], args: {App.comment_temp_file_path}, output: STDOUT, input: STDIN, error: STDERR, shell: true)
+  def archive
+    response = API.put("cards/#{@id}", "closed=true")
+    if response.success?
+      fetch
+    else
+      App.log.debug("failed to archive card: #{response.inspect}")
+    end
+  end
 
-    App.reset_screen
-
-    unless !File.exists?(App.comment_temp_file_path) || File.empty?(App.comment_temp_file_path)
-      comment_text = File.read(App.comment_temp_file_path)
-      API.post("/cards/#{@id}/actions/comments", form: { "text" => comment_text })
+  def add_attachment
+    Editor.run(contents: "{\n  \"name\": \"\",\n  \"url\": \"\"\n}") do |json|
+      att = JSON.parse(json)
+      API.post("/cards/#{@id}/attachments", form: "name=#{att["name"]}&url=#{att["url"]}")
       fetch
     end
   end

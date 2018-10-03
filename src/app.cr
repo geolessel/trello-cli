@@ -79,10 +79,6 @@ class App
     sleep 1
   end
 
-  def self.comment_temp_file_path
-    "#{CONFIG_DIR}/comment.tmp"
-  end
-
   def self.reset_screen
     NCurses.clear
     NCurses.erase

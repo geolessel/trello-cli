@@ -94,6 +94,11 @@ class DetailsWindow < Window
       `open #{@card.short_url}`
     when 'r'
       reload_card!
+    when 'i'
+      Popup.new(width: (NCurses.maxx / 1.5).to_i) do |popup|
+        popup.link_parent(self)
+        popup.text = "GitHub Markdown link:\n![](https://github.trello.services/images/mini-trello-icon.png)\n[#{@card.name}](#{@card.short_url})"
+      end
     when 'm'
       ListSelectWindow.new(board_id: @card.board_id) do |win|
         win.link_parent(self)
@@ -126,6 +131,7 @@ class DetailsWindow < Window
         win.add_help(key: "x", description: "Archive card")
         win.add_help(key: "o", description: "Open this card in your web browser")
         win.add_help(key: "r", description: "Refresh the details")
+        win.add_help(key: "i", description: "Show further information about this card")
         win.add_help(key: "j", description: "Scroll down")
         win.add_help(key: "k", description: "Scroll up")
         win.add_help(key: "h", description: "Go back")

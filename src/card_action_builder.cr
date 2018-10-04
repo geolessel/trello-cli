@@ -17,6 +17,12 @@ class CardActionBuilder
               DeleteAttachmentFromCard
             when "createCard"
               CreateCard
+            when "updateCard"
+              if action["data"].as_h.fetch("listBefore", false)
+                UpdateCard
+              else
+                BlankCard
+              end
             when "updateCheckItemStateOnCard"
               UpdateCheckItemStateOnCard
             else

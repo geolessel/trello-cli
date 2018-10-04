@@ -51,7 +51,6 @@ class DetailsWindow < Window
       pad.attroff(App::Colors.green)
       @card.activities.map { |activity| CardActionBuilder.run(activity) }.each do |activity|
         activity.display!(pad, width: @width - 2)
-        pad.addstr("\n\n\n")
       end
       pad.refresh(@row, 0, 6, 28, NCurses.maxy - 3, NCurses.maxx - 2)
     end

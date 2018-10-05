@@ -19,7 +19,7 @@ class CardActionBuilder
               CreateCard
             when "updateCard"
               if action["data"].as_h.fetch("listBefore", false)
-                UpdateCard
+                MoveCard
               else
                 BlankCard
               end

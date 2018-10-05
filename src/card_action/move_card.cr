@@ -1,6 +1,6 @@
 require "./card_action"
 
-class UpdateCard < CardAction
+class MoveCard < CardAction
   def title
     "#{creator} moved the card: #{before_list} -> #{after_list}"
   end

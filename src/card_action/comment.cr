@@ -11,6 +11,7 @@ class Comment < CardAction
     display_title(pad, width)
     display_description(pad, width)
     display_timestamp(pad, width)
+    pad.addstr("\n\n")
   end
 
   def display_title(pad : NCurses::Pad | NCurses::Window, width : Int32)

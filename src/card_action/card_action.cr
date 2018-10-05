@@ -15,6 +15,7 @@ class CardAction
     pad.addstr(" -- ") unless description.blank?
     display_description(pad, width)
     display_timestamp(pad, width)
+    pad.addstr("\n\n\n")
   end
 
   def display_title(pad : NCurses::Pad | NCurses::Window, width : Int32)

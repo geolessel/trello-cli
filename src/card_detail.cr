@@ -12,6 +12,7 @@ class CardDetail
     "addChecklistToCard",
     "commentCard",
     "createCard",
+    "updateCard",
     "deleteAttachmentFromCard",
     "removeMemberFromCard",
     "updateCheckItemStateOnCard",

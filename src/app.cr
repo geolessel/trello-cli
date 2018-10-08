@@ -71,6 +71,7 @@ class App
 
   def self.run_setup
     Setup.make_config_dir
+    Setup.make_templates
     Setup.display_intro_text
     @@token = Setup.get_token
     @@member_id = Setup.fetch_member_id
@@ -111,8 +112,17 @@ class App
   module Setup
     extend self
 
+    TEMPLATE_DIR = "#{CONFIG_DIR}/templates"
+
     def make_config_dir
       Dir.mkdir_p(CONFIG_DIR)
+    end
+
+    def make_templates
+      Dir.mkdir_p(TEMPLATE_DIR)
+      make_empty_template("comment.txt")
+      make_attachment_template
+      make_new_card_template
     end
 
     def display_intro_text
@@ -139,6 +149,40 @@ class App
 
     def write_config(token, member_id)
       File.write("#{App::CONFIG_DIR}/secrets.json", "{\"token\": \"#{token}\", \"memberId\": \"#{member_id}\"}")
+    end
+
+    def make_empty_template(template_name)
+      File.write("#{TEMPLATE_DIR}/#{template_name}", "\n\n#{ignored_comments_declaration}")
+    end
+
+    def make_attachment_template
+      content = <<-ATT
+      {
+        "name": "",
+        "url": ""
+      }
+
+      #{Editor::COMMENT_STRING} CARD ATTACHMENT
+      #{ignored_comments_declaration}
+      ATT
+      File.write("#{TEMPLATE_DIR}/attachment.json", content)
+    end
+
+    def make_new_card_template
+      content = <<-CARD
+      {
+        "name": "",
+        "description": ""
+      }
+
+      #{Editor::COMMENT_STRING} NEW CARD
+      #{ignored_comments_declaration}
+      CARD
+      File.write("#{TEMPLATE_DIR}/new_card.json", content)
+    end
+
+    def ignored_comments_declaration
+      "// Lines that start with `//` will be ignored."
     end
   end
 end

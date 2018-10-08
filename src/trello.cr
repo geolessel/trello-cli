@@ -1,6 +1,5 @@
-# TODO: Write documentation for `Trello`
-
 require "ncurses"
+require "option_parser"
 require "./*"
 
 module Trello
@@ -44,6 +43,11 @@ end
 unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
   if !File.exists?("#{App::CONFIG_DIR}/secrets.json")
     App.run_setup
+  end
+
+  OptionParser.parse! do |parser|
+    parser.banner = "trello\n\nUsage: trello [arguments]"
+    parser.on("--setup-templates", "Set up editor templates") { App::Setup.make_templates; exit }
   end
 
   App.init

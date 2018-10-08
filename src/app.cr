@@ -152,18 +152,37 @@ class App
     end
 
     def make_empty_template(template_name)
-      content = "\n\n#{Editor::COMMENT_STRING} Lines that start with a #{Editor::COMMENT_STRING} will not be included"
-      File.write("#{TEMPLATE_DIR}/#{template_name}", content)
+      File.write("#{TEMPLATE_DIR}/#{template_name}", "\n\n#{ignored_comments_declaration}")
     end
 
     def make_attachment_template
-      content = "#{Editor::COMMENT_STRING} CARD ATTACHMENT\n{\n  \"name\": \"\",\n  \"url\": \"\"\n}\n\n#{Editor::COMMENT_STRING} Lines that start with a #{Editor::COMMENT_STRING} will not be included"
+      content = <<-ATT
+      {
+        "name": "",
+        "url": ""
+      }
+
+      #{Editor::COMMENT_STRING} CARD ATTACHMENT
+      #{ignored_comments_declaration}
+      ATT
       File.write("#{TEMPLATE_DIR}/attachment.json", content)
     end
 
     def make_new_card_template
-      content = "#{Editor::COMMENT_STRING} NEW CARD\n{\n  \"name\": \"\",\n  \"description\": \"\"\n}\n\n#{Editor::COMMENT_STRING} Lines that start with a #{Editor::COMMENT_STRING} will not be included"
+      content = <<-CARD
+      {
+        "name": "",
+        "description": ""
+      }
+
+      #{Editor::COMMENT_STRING} NEW CARD
+      #{ignored_comments_declaration}
+      CARD
       File.write("#{TEMPLATE_DIR}/new_card.json", content)
+    end
+
+    def ignored_comments_declaration
+      "// Lines that start with `//` will be ignored."
     end
   end
 end

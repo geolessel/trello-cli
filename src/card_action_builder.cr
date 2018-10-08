@@ -20,6 +20,8 @@ class CardActionBuilder
             when "updateCard"
               if action["data"].as_h.fetch("listBefore", false)
                 MoveCard
+              elsif action["data"]["old"].as_h.fetch("closed", false)
+                ArchiveCard
               else
                 BlankCard
               end

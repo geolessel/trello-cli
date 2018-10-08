@@ -93,7 +93,7 @@ class CardDetail
   end
 
   def add_comment
-    Editor.run do |comment|
+    Editor.run(template: "comment.txt") do |comment|
       API.post("/cards/#{@id}/actions/comments", form: { "text" => comment })
       fetch
     end
@@ -109,7 +109,7 @@ class CardDetail
   end
 
   def add_attachment
-    Editor.run(contents: "{\n  \"name\": \"\",\n  \"url\": \"\"\n}") do |json|
+    Editor.run(template: "attachment.json") do |json|
       att = JSON.parse(json)
       API.post("/cards/#{@id}/attachments", form: "name=#{att["name"]}&url=#{att["url"]}")
       fetch

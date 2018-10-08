@@ -53,14 +53,7 @@ class CardsWindow < OptionSelectWindow
   def handle_key(key)
     case key
     when 'c'
-      contents = JSON.build do |json|
-        json.object do
-          json.field "name", ""
-          json.field "description", ""
-        end
-      end
-
-      Editor.run(contents: contents) do |card_json|
+      Editor.run(template: "new_card.json") do |card_json|
         card = JSON.parse(card_json)
         API.post("/cards", params: "idList=#{@list_id}", form: "name=#{card["name"]}&desc=#{card["description"]}")
         fetch

@@ -126,6 +126,7 @@ class OptionSelectWindow < Window
   def handle_select_previous
     @options = [] of OptionSelectOption
     @selected = 0
+    Notification.fetch_async
     activate_parent!
   end
 

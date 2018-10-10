@@ -38,6 +38,7 @@ class CardsWindow < OptionSelectWindow
 
   def handle_select_next(selected)
     card = CardDetail.new(id: selected.key, name: selected.value)
+    Notification.mark_read_for_card(card)
 
     details = DetailsWindow.new(card: card)
     details.link_parent(self)

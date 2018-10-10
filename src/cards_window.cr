@@ -24,17 +24,21 @@ class CardsWindow < OptionSelectWindow
 
   def render_row(option)
     member_ids = option.json.as_h["members"].as_a.map { |m| m["id"].to_s }
+    notification = App.notifications[option.json.as_h["id"]]?
     if member_ids.includes?(App.member_id)
       win.attron(App::Colors.yellow)
+      Notification.render(win) if notification
       super
       win.attroff(App::Colors.yellow)
     else
+      Notification.render(win) if notification
       super
     end
   end
 
   def handle_select_next(selected)
     card = CardDetail.new(id: selected.key, name: selected.value)
+    Notification.mark_read_for_card(card)
 
     details = DetailsWindow.new(card: card)
     details.link_parent(self)

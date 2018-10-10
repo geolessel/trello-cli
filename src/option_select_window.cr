@@ -50,9 +50,9 @@ class OptionSelectWindow < Window
 
       if i == @selected
         if @active
-          win.attron( App::Colors.blue | NCurses::Attribute::REVERSE)
+          win.attron(App::Colors.blue | NCurses::Attribute::REVERSE)
         else
-          win.attron( App::Colors.blue)
+          win.attron(App::Colors.blue)
         end
       end
       render_row(option)
@@ -126,6 +126,7 @@ class OptionSelectWindow < Window
   def handle_select_previous
     @options = [] of OptionSelectOption
     @selected = 0
+    Notification.fetch_async
     activate_parent!
   end
 

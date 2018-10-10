@@ -24,6 +24,8 @@ module Trello
       NCurses.refresh
       App.windows.each { |w| w.refresh }
 
+      Notification.fetch_async
+
       while true
         NCurses.notimeout(true)
         key = NCurses.getch

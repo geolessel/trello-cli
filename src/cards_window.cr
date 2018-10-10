@@ -24,11 +24,14 @@ class CardsWindow < OptionSelectWindow
 
   def render_row(option)
     member_ids = option.json.as_h["members"].as_a.map { |m| m["id"].to_s }
+    notification = App.notifications[option.json.as_h["id"]]?
     if member_ids.includes?(App.member_id)
       win.attron(App::Colors.yellow)
+      notification.render(win) if notification
       super
       win.attroff(App::Colors.yellow)
     else
+      notification.render(win) if notification
       super
     end
   end

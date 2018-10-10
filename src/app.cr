@@ -10,6 +10,7 @@ class App
   @@secrets : JSON::Any = JSON::Any.new("{}")
   @@token : String | Nil = ""
   @@log : Logger = Logger.new(nil)
+  @@notifications : Hash(String, Notification) = {} of String => Notification
 
   def self.init
     @@secrets = JSON.parse(File.read("#{CONFIG_DIR}/secrets.json"))
@@ -51,6 +52,14 @@ class App
 
   def self.windows
     @@windows
+  end
+
+  def self.notifications=(notifications : Hash(String, Notification))
+    @@notifications = notifications
+  end
+
+  def self.notifications
+    @@notifications
   end
 
   def self.credentials
@@ -107,6 +116,10 @@ class App
     def yellow
       NCurses::ColorPair.new(4).init(NCurses::Color::YELLOW, NCurses::Color::BLACK).attr
     end
+
+    def red
+      NCurses::ColorPair.new(5).init(NCurses::Color::RED, NCurses::Color::BLACK).attr
+    end
   end
 
   module Setup
@@ -136,7 +149,7 @@ class App
     end
 
     def get_token
-      `open 'https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-cli&key=#{APP_KEY}'`
+      `open 'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=trello-cli&key=#{APP_KEY}'`
       print "Token: "
       gets
     end

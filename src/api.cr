@@ -5,7 +5,7 @@ require "./app"
 class API
   API_ROOT = "https://api.trello.com/1/"
 
-  def self.get(path : String, params : String)
+  def self.get(path : String, params : String = "")
     url = "#{API_ROOT}/#{path}?#{App.credentials}&#{params}"
     App.log.debug("GETting URL: #{url}")
     response = HTTP::Client.get(url)

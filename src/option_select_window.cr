@@ -50,9 +50,9 @@ class OptionSelectWindow < Window
 
       if i == @selected
         if @active
-          win.attron( App::Colors.blue | NCurses::Attribute::REVERSE)
+          win.attron(App::Colors.blue | NCurses::Attribute::REVERSE)
         else
-          win.attron( App::Colors.blue)
+          win.attron(App::Colors.blue)
         end
       end
       render_row(option)

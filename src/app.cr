@@ -10,7 +10,7 @@ class App
   @@secrets : JSON::Any = JSON::Any.new("{}")
   @@token : String | Nil = ""
   @@log : Logger = Logger.new(nil)
-  @@notifications : Hash(String, Notification) = {} of String => Notification
+  @@notifications : Hash(String, Array(Notification)) = {} of String => Array(Notification)
 
   def self.init
     @@secrets = JSON.parse(File.read("#{CONFIG_DIR}/secrets.json"))
@@ -54,7 +54,7 @@ class App
     @@windows
   end
 
-  def self.notifications=(notifications : Hash(String, Notification))
+  def self.notifications=(notifications : Hash(String, Array(Notification)))
     @@notifications = notifications
   end
 

@@ -21,16 +21,17 @@ class Notification
     @data["unread"].as_bool
   end
 
-  def render(win)
+  def self.render(win)
     win.addstr(SYMBOL)
     win.addstr(" ")
   end
 
   def self.fetch
     json = API.get("members/me/notifications", "read_filter=unread&limit=1000")
-    App.notifications = json.as_a.each_with_object({} of String => Notification) do |notification, hash|
+    App.notifications = json.as_a.each_with_object({} of String => Array(Notification)) do |notification, hash|
       n = Notification.new(notification)
-      hash[n.card_id] = n unless n.card_id.blank?
+      hash[n.card_id] ||= [] of Notification
+      hash[n.card_id] << n unless n.card_id.blank?
     end
   end
 
@@ -43,12 +44,13 @@ class Notification
 
   def self.mark_read_for_card(card : CardDetail)
     if App.notifications.has_key? card.id
-      spawn do
-        notification = App.notifications[card.id]
-        App.log.debug(notification.id)
-        API.put("notifications/#{notification.id}/unread", "value=false")
+      App.notifications[card.id].each do |notification|
+        spawn do
+          API.put("notifications/#{notification.id}/unread", "value=false")
+        end
       end
       Fiber.yield
+      App.notifications.delete(card.id)
     end
   end
 end

@@ -36,10 +36,10 @@ class Notification
   end
 
   def self.fetch_async
-    spawn do
+    # spawn do
       Notification.fetch
-    end
-    Fiber.yield
+    # end
+    # Fiber.yield
   end
 
   def self.mark_read_for_card(card : CardDetail)

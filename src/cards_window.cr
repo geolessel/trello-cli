@@ -1,5 +1,6 @@
 require "./option_select_window"
 require "./card_detail"
+require "./label_renderer"
 
 class CardsWindow < OptionSelectWindow
   property list_id : String = ""
@@ -19,19 +20,22 @@ class CardsWindow < OptionSelectWindow
   def set_list_id(id : String)
     @list_id = id
     @path = "lists/#{id}/cards"
-    @params = "fields=name,shortUrl&members=true"
+    @params = "fields=name,shortUrl,labels&members=true"
   end
 
   def render_row(option)
     member_ids = option.json.as_h["members"].as_a.map { |m| m["id"].to_s }
     notification = App.notifications[option.json.as_h["id"]]?
+    labels = option.json.as_h["labels"].as_a.map { |l| l["name"].to_s }
     if member_ids.includes?(App.member_id)
       win.attron(App::Colors.yellow)
       Notification.render(win) if notification
+      LabelRenderer.render(win, labels)
       super
       win.attroff(App::Colors.yellow)
     else
       Notification.render(win) if notification
+      LabelRenderer.render(win, labels)
       super
     end
   end

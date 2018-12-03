@@ -9,6 +9,7 @@ class App
   @@member_id : String = ""
   @@secrets : JSON::Any = JSON::Any.new("{}")
   @@token : String | Nil = ""
+  @@card_labels : Hash(String, String) = {} of String => String
   @@log : Logger = Logger.new(nil)
   @@notifications : Hash(String, Array(Notification)) = {} of String => Array(Notification)
 
@@ -16,6 +17,10 @@ class App
     @@secrets = JSON.parse(File.read("#{CONFIG_DIR}/secrets.json"))
     @@token = App.secrets["token"].to_s
     @@member_id = @@secrets["memberId"].to_s
+    @@secrets.as_h.has_key?("cardLabels") && @@secrets["cardLabels"].as_h
+      .each do |k, v|
+        @@card_labels[k.to_s] = v.to_s
+      end
     @@log = Logger.new(File.open("#{CONFIG_DIR}/log.txt", "w"), level: Logger::DEBUG)
   end
 
@@ -76,6 +81,10 @@ class App
 
   def self.log
     @@log
+  end
+
+  def self.card_labels
+    @@card_labels
   end
 
   def self.run_setup
@@ -161,7 +170,15 @@ class App
     end
 
     def write_config(token, member_id)
-      File.write("#{App::CONFIG_DIR}/secrets.json", "{\"token\": \"#{token}\", \"memberId\": \"#{member_id}\"}")
+      content = <<-CONFIG
+      {
+        "token": "#{token}",
+        "memberId": "#{member_id}",
+        "cardLabels": {
+        }
+      }
+      CONFIG
+      File.write("#{App::CONFIG_DIR}/secrets.json", content)
     end
 
     def make_empty_template(template_name)
@@ -195,7 +212,7 @@ class App
     end
 
     def ignored_comments_declaration
-      "// Lines that start with `//` will be ignored."
+      "#{Editor::COMMENT_STRING} Lines that start with `#{Editor::COMMENT_STRING}` will be ignored."
     end
   end
 end

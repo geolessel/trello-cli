@@ -46,6 +46,20 @@ class DetailsWindow < Window
         pad.addstr("#{attachment["name"].to_s}\n")
       end
 
+      @card.checklists.each do |checklist|
+        pad.attron(App::Colors.green)
+        pad.addstr("\n\n--|   #{checklist["name"].to_s}   |--\n")
+        pad.attroff(App::Colors.green)
+        checklist["checkItems"].as_a.each do |item|
+          if item.as_h["state"].to_s == "complete"
+            pad.addstr("[x] ")
+          else
+            pad.addstr("[ ] ")
+          end
+          pad.addstr("#{item.as_h["name"].to_s}\n")
+        end
+      end
+
       pad.attron(App::Colors.green)
       pad.addstr("\n\n--|   Activity   |--\n")
       pad.attroff(App::Colors.green)

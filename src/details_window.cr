@@ -39,11 +39,14 @@ class DetailsWindow < Window
       wrap(@card.description, @width - 2).each_line.with_index do |line, i|
         pad.mvaddstr(line.rstrip, x: 0, y: i)
       end
-      pad.attron(App::Colors.green)
-      pad.addstr("\n\n--|   Attachments   |--\n")
-      pad.attroff(App::Colors.green)
-      @card.attachments.each do |attachment|
-        pad.addstr("#{attachment["name"].to_s}\n")
+
+      if @card.attachments.size > 0
+        pad.attron(App::Colors.green)
+        pad.addstr("\n\n--|   Attachments   |--\n")
+        pad.attroff(App::Colors.green)
+        @card.attachments.each do |attachment|
+          pad.addstr("#{attachment["name"].to_s}\n")
+        end
       end
 
       @card.checklists.each do |checklist|

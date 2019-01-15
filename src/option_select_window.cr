@@ -85,6 +85,8 @@ class OptionSelectWindow < Window
     when NCurses::KeyCode::LEFT, 'q', 'h' # Q, J
       handle_select_previous
     when 'r'
+      @selected = 0
+      @row_offest = 0
       fetch
     when '?'
       HelpWindow.new do |win|

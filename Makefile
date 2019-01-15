@@ -9,3 +9,5 @@ uninstall:
 	rm /usr/local/bin/trello
 clean:
 	rm bin/*
+run:
+	LDFLAGS="-L/usr/local/opt/ncurses/lib" PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:/usr/local/opt/openssl/lib/pkgconfig" crystal run src/trello.cr

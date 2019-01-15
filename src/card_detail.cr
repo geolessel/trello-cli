@@ -5,6 +5,7 @@ require "./editor"
 class CardDetail
   getter id, name
   property json : JSON::Any = JSON::Any.new("{}")
+  property checklists : Array(JSON::Any) = [JSON::Any.new("{}")]
 
   HANDLED_TYPES = [
     "addMemberToCard",
@@ -24,6 +25,7 @@ class CardDetail
   def fetch
     @json = API.get("/cards/#{@id}", "members=true&attachments=true&actions=all&actions_limit=1000")
     # App::LOG.debug("Unhandled types: #{@json.as_h["actions"].as_a.reject { |a| HANDLED_TYPES.includes?(a["type"].to_s) }.map{|a| a["type"]}.uniq.join(", ")}")
+    @checklists = @json.as_h["idChecklists"].as_a.map { |id| API.get("/checklists/#{id}") }
   end
 
   def member_usernames

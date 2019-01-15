@@ -42,7 +42,7 @@ class DetailsWindow < Window
 
       if @card.attachments.size > 0
         pad.attron(App::Colors.green)
-        pad.addstr("\n\n--|   Attachments   |--\n")
+        pad.addstr(section_header("Attachments"))
         pad.attroff(App::Colors.green)
         @card.attachments.each do |attachment|
           pad.addstr("#{attachment["name"].to_s}\n")
@@ -51,7 +51,7 @@ class DetailsWindow < Window
 
       @card.checklists.each do |checklist|
         pad.attron(App::Colors.green)
-        pad.addstr("\n\n--|   #{checklist["name"].to_s}   |--\n")
+        pad.addstr(section_header(checklist["name"].to_s))
         pad.attroff(App::Colors.green)
         checklist["checkItems"].as_a.each do |item|
           if item.as_h["state"].to_s == "complete"
@@ -64,7 +64,7 @@ class DetailsWindow < Window
       end
 
       pad.attron(App::Colors.green)
-      pad.addstr("\n\n--|   Activity   |--\n")
+      pad.addstr(section_header("Activity"))
       pad.attroff(App::Colors.green)
       @card.activities.map { |activity| CardActionBuilder.run(activity) }.each do |activity|
         activity.display!(pad, width: @width - 2)
@@ -162,5 +162,9 @@ class DetailsWindow < Window
 
   def reload_card!
     @card.fetch
+  end
+
+  def section_header(text)
+    "\n\n--|   #{text}   |--\n"
   end
 end

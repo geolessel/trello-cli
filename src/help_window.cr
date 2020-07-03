@@ -5,7 +5,7 @@ class HelpWindow < Window
   property helps : Array(NamedTuple(key: String, description: String)) = [] of NamedTuple(key: String, description: String)
 
   def initialize(&block)
-    initialize(x: NCurses.maxx / 4, y: NCurses.maxy / 4, height: NCurses.maxy / 2, width: NCurses.maxx / 2) do |win|
+    initialize(x: NCurses.maxx // 4, y: NCurses.maxy // 4, height: NCurses.maxy // 2, width: NCurses.maxx // 2) do |win|
       win.title = "Help"
       win.active = true
       yield win

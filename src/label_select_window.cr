@@ -5,7 +5,7 @@ class LabelSelectWindow < OptionSelectWindow
   # @on_select : String -> IO) = ->(label_id : String) {}
 
   def initialize(@board_id : String, &block)
-    super(x: NCurses.maxx / 4, y: NCurses.maxy / 4, width: NCurses.maxx / 2, height: NCurses.maxy / 2) do |win|
+    super(x: NCurses.maxx // 4, y: NCurses.maxy // 4, width: NCurses.maxx // 2, height: NCurses.maxy // 2) do |win|
       win.title = "Available Labels"
       win.path = "boards/#{@board_id}/labels"
       App.add_window(win)

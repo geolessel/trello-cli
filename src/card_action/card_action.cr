@@ -37,7 +37,7 @@ class CardAction
   end
 
   def title
-    App.log.debug("unhandled action: #{type}")
+    App.log.debug { "unhandled action: #{type}" }
     ""
   end
 

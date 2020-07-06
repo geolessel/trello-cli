@@ -8,7 +8,7 @@ class Popup < Window
   property on_close : Proc(Void) = -> {}
   property text : String = ""
 
-  def initialize(x = NCurses.maxx / 4, y = NCurses.maxy / 4, height = NCurses.maxy / 2, width = NCurses.maxx / 2, &block)
+  def initialize(x = NCurses.maxx // 4, y = NCurses.maxy // 4, height = NCurses.maxy // 2, width = NCurses.maxx // 2, &block)
     initialize(x: x, y: y, height: height, width: width) do |win|
       win.active = true
       yield win

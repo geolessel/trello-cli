@@ -4,7 +4,7 @@ class AttachmentSelectWindow < OptionSelectWindow
   property on_select : (String -> IO) | (String -> Nil) = ->(list_id : String) {}
 
   def initialize(@card_id : String, &block)
-    super(x: NCurses.maxx / 4, y: NCurses.maxy / 4, height: NCurses.maxy / 2, width: NCurses.maxx / 2) do |win|
+    super(x: NCurses.maxx // 4, y: NCurses.maxy // 4, height: NCurses.maxy // 2, width: NCurses.maxx // 2) do |win|
       win.title = "Attachments"
       win.path = "cards/#{@card_id}/attachments"
       App.add_window(win)

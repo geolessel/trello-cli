@@ -2,7 +2,7 @@ class ListSelectWindow < OptionSelectWindow
   property on_select : (String -> IO) | (String -> Nil) = ->(list_id : String) {}
 
   def initialize(@board_id : String, &block)
-    super(x: NCurses.maxx / 4, y: NCurses.maxy / 4, width: NCurses.maxx / 2, height: NCurses.maxy / 2) do |win|
+    super(x: NCurses.maxx // 4, y: NCurses.maxy // 4, width: NCurses.maxx // 2, height: NCurses.maxy // 2) do |win|
       win.title = "Available Lists"
       win.path = "boards/#{@board_id}/lists"
       App.add_window(win)

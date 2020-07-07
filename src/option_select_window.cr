@@ -94,7 +94,7 @@ class OptionSelectWindow < Window
         add_helps(win)
       end
     else
-      App.log.debug("Unhandled key: #{key}")
+      App.log.debug { "Unhandled key: #{key}" }
     end
   end
 

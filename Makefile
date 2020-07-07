@@ -1,7 +1,12 @@
+OPENSSL_DIR = $(shell brew --prefix openssl)
+NCURSES_DIR = $(shell brew --prefix ncurses)
+PKG_CONFIG_PATH = "$(NCURSES_DIR)/lib/pkgconfig:$(OPENSSL_DIR)/lib/pkgconfig"
+LDFLAGS = "-L$(NCURSES_DIR)/lib"
+
 make: src/trello.cr
 	mkdir -p bin
 	shards
-	crystal build --release --stats --progress --time src/trello.cr -o bin/trello
+	LDFLAGS=$(LDFLAGS) PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) crystal build --release --stats --progress --time src/trello.cr -o bin/trello
 install:
 	make
 	cp bin/trello /usr/local/bin
@@ -10,4 +15,4 @@ uninstall:
 clean:
 	rm bin/*
 run:
-	LDFLAGS="-L/usr/local/opt/ncurses/lib" PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:/usr/local/opt/openssl/lib/pkgconfig" crystal run src/trello.cr
+	LDFLAGS=$(LDFLAGS) PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) crystal run src/trello.cr

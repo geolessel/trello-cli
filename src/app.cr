@@ -1,5 +1,5 @@
 require "ncurses"
-require "logger"
+require "log"
 
 class App
   CONFIG_DIR = "#{ENV["HOME"]}/.trello-cli"
@@ -10,7 +10,7 @@ class App
   @@secrets : JSON::Any = JSON::Any.new("{}")
   @@token : String | Nil = ""
   @@card_labels : Hash(String, String) = {} of String => String
-  @@log : Logger = Logger.new(nil)
+  @@log : Log = ::Log.for("trello")
   @@notifications : Hash(String, Array(Notification)) = {} of String => Array(Notification)
 
   def self.init
@@ -21,7 +21,7 @@ class App
       .each do |k, v|
         @@card_labels[k.to_s] = v.to_s
       end
-    @@log = Logger.new(File.open("#{CONFIG_DIR}/log.txt", "w"), level: Logger::DEBUG)
+    Log.setup(level: :debug, backend: Log::IOBackend.new(File.open("#{CONFIG_DIR}/log.txt", "w")))
   end
 
   def self.setup_ncurses
@@ -94,8 +94,17 @@ class App
     @@token = Setup.get_token
     @@member_id = Setup.fetch_member_id
     Setup.write_config(@@token, @@member_id)
-    puts "Done."
-    sleep 1
+    puts "Done. Starting trello..."
+    sleep 2
+  end
+
+  def self.reauthorize
+    Setup.display_intro_text
+    @@token = Setup.get_token
+    @@member_id = Setup.fetch_member_id
+    Setup.write_config(@@token, @@member_id)
+    puts "Done. Starting trello..."
+    sleep 2
   end
 
   def self.reset_screen
@@ -170,15 +179,30 @@ class App
     end
 
     def write_config(token, member_id)
-      content = <<-CONFIG
-      {
-        "token": "#{token}",
-        "memberId": "#{member_id}",
-        "cardLabels": {
-        }
-      }
-      CONFIG
-      File.write("#{App::CONFIG_DIR}/secrets.json", content)
+      secrets_file_path = "#{App::CONFIG_DIR}/secrets.json"
+
+      if File.exists?(secrets_file_path)
+        secrets = File.read(secrets_file_path)
+        card_labels = JSON.parse(secrets)["cardLabels"]
+        card_labels = Hash(String, String).from_json(card_labels.to_json)
+      else
+        card_labels = {} of String => String
+      end
+
+      secrets = JSON.build(indent: 2) do |json|
+        json.object do
+          json.field "token", token
+          json.field "memberId", member_id
+          json.field "cardLabels" do
+            json.start_object
+            card_labels.each do |k, v|
+              json.field k, v
+            end
+            json.end_object
+          end
+        end
+      end
+      File.write(secrets_file_path, secrets)
     end
 
     def make_empty_template(template_name)

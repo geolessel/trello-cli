@@ -66,7 +66,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App.log.debug("failed to manage user as member: #{response.inspect}")
+      App.log.debug { "failed to manage user as member: #{response.inspect}" }
     end
   end
 
@@ -81,7 +81,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App.log.debug("failed to manage label on card: #{response.inspect}")
+      App.log.debug { "failed to manage label on card: #{response.inspect}" }
     end
   end
 
@@ -90,7 +90,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App.log.debug("failed to move card to list: #{response.inspect}")
+      App.log.debug { "failed to move card to list: #{response.inspect}" }
     end
   end
 
@@ -106,7 +106,7 @@ class CardDetail
     if response.success?
       fetch
     else
-      App.log.debug("failed to archive card: #{response.inspect}")
+      App.log.debug { "failed to archive card: #{response.inspect}" }
     end
   end
 

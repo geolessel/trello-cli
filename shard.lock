@@ -1,6 +1,6 @@
-version: 1.0
+version: 2.0
 shards:
   ncurses:
-    github: geolessel/ncurses.cr
-    commit: b7bbc1762fcf67b08da02113709c4002ca86f17f
+    git: https://github.com/geolessel/ncurses.cr.git
+    version: 0.1.0+git.commit.b7bbc1762fcf67b08da02113709c4002ca86f17f
 

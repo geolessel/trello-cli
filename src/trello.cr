@@ -47,8 +47,10 @@ unless ENV.fetch("CRYSTAL_ENV", nil) == "test"
     App.run_setup
   end
 
-  OptionParser.parse! do |parser|
+  OptionParser.parse do |parser|
     parser.banner = "trello\n\nUsage: trello [arguments]"
+    parser.on("-h", "--help", "Show this help") { puts parser; exit }
+    parser.on("--reauthorize", "Reauthorize with Trello and reconfigure application") { App.reauthorize }
     parser.on("--setup", "Before starting, run through the setup process again") { App.run_setup }
     parser.on("--setup-templates", "Set up editor templates") { App::Setup.make_templates; exit }
   end
